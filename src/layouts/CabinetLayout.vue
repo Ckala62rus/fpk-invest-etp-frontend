@@ -24,6 +24,10 @@ async function onLogout() {
       <div class="cabinet-layout__title">Кабинет участника</div>
       <nav>
         <router-link :to="{ name: 'cabinet' }">Обзор</router-link>
+        <router-link :to="{ name: 'cabinet.profile' }">Профиль</router-link>
+        <router-link :to="{ name: 'cabinet.subscriptions' }">Подписки</router-link>
+        <router-link :to="{ name: 'cabinet.notifications' }">Уведомления</router-link>
+        <router-link :to="{ name: 'cabinet.proposals' }">Мои КП</router-link>
         <router-link :to="{ name: 'home' }">На витрину</router-link>
         <router-link v-if="auth.isAdminArea" :to="{ name: 'admin.dashboard' }">
           В админку
