@@ -35,6 +35,9 @@ async function onLogout() {
         </router-link>
         <router-link :to="{ name: 'admin.procedures' }">ТЗП</router-link>
         <router-link v-if="isSuperAdmin" :to="{ name: 'admin.cms' }">CMS</router-link>
+        <router-link v-if="isSuperAdmin" :to="{ name: 'admin.notifications' }">Письма</router-link>
+        <router-link v-if="isSuperAdmin" :to="{ name: 'admin.surveys' }">Опросы</router-link>
+        <router-link :to="{ name: 'admin.reports' }">Отчёты</router-link>
         <router-link :to="{ name: 'admin.activity' }">Аудит</router-link>
         <router-link :to="{ name: 'home' }">Витрина</router-link>
         <router-link :to="{ name: 'cabinet' }">Кабинет</router-link>

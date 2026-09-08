@@ -75,6 +75,7 @@ const urls = {
     adminProposalMessages: (procedureId, proposalId) => `/admin/procedures/${procedureId}/proposals/${proposalId}/messages`,
 
     adminProcedureLots: (procedureId) => `/admin/procedures/${procedureId}/lots`,
+    adminProcedureLot: (procedureId, lotId) => `/admin/procedures/${procedureId}/lots/${lotId}`,
     adminAuctionSettings: (procedureId) => `/admin/procedures/${procedureId}/auction-settings`,
     adminAuctionStart: (procedureId) => `/admin/procedures/${procedureId}/auction/start`,
     adminAuctionPause: (procedureId) => `/admin/procedures/${procedureId}/auction/pause`,
@@ -85,8 +86,23 @@ const urls = {
     adminAuctionPresence: (procedureId) => `/admin/procedures/${procedureId}/auction/presence`,
     adminAuctionProtocols: (procedureId) => `/admin/procedures/${procedureId}/auction/protocols`,
 
+    adminChangeLogs: (procedureId) => `/admin/procedures/${procedureId}/change-logs`,
+    adminChangeLogApprove: (procedureId, changeLogId) => `/admin/procedures/${procedureId}/change-logs/${changeLogId}/approve`,
+    adminChangeLogReject: (procedureId, changeLogId) => `/admin/procedures/${procedureId}/change-logs/${changeLogId}/reject`,
+
     adminCmsPages: '/admin/cms-pages',
     adminCmsPage: (id) => `/admin/cms-pages/${id}`,
+
+    adminNotificationTemplates: '/admin/notification-templates',
+    adminNotificationTemplate: (id) => `/admin/notification-templates/${id}`,
+
+    adminEvaluationSurveyTemplates: '/admin/evaluation-survey-templates',
+    adminEvaluationSurveyTemplate: (id) => `/admin/evaluation-survey-templates/${id}`,
+
+    adminReportTemplates: '/admin/report-templates',
+    adminReportTemplate: (id) => `/admin/report-templates/${id}`,
+    adminReportTemplateRuns: (id) => `/admin/report-templates/${id}/runs`,
+    adminReportRunDownload: (runId) => `/admin/report-runs/${runId}/download`,
 
     adminActivityLogs: '/admin/activity-logs',
     adminActivityLogsExport: '/admin/activity-logs/export',

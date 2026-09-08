@@ -265,6 +265,61 @@ const routes = [
         },
     },
     {
+        path: '/admin/notifications',
+        name: 'admin.notifications',
+        component: () => import('@/pages/admin/AdminNotificationsPage.vue'),
+        meta: {
+            layout: 'admin',
+            requiresAuth: true,
+            roles: [ROLES.SUPER_ADMIN],
+            title: 'Шаблоны писем',
+        },
+    },
+    {
+        path: '/admin/reports',
+        name: 'admin.reports',
+        component: () => import('@/pages/admin/AdminReportsPage.vue'),
+        meta: {
+            layout: 'admin',
+            requiresAuth: true,
+            roles: [...ADMIN_ROLES],
+            title: 'Отчёты',
+        },
+    },
+    {
+        path: '/admin/surveys',
+        name: 'admin.surveys',
+        component: () => import('@/pages/admin/AdminSurveysPage.vue'),
+        meta: {
+            layout: 'admin',
+            requiresAuth: true,
+            roles: [ROLES.SUPER_ADMIN],
+            title: 'Опросы',
+        },
+    },
+    {
+        path: '/admin/procedures/:id/lots',
+        name: 'admin.lots',
+        component: () => import('@/pages/admin/AdminLotsPage.vue'),
+        meta: {
+            layout: 'admin',
+            requiresAuth: true,
+            roles: [...ADMIN_ROLES],
+            title: 'Лоты',
+        },
+    },
+    {
+        path: '/admin/procedures/:id/change-logs',
+        name: 'admin.changeLogs',
+        component: () => import('@/pages/admin/AdminChangeLogsPage.vue'),
+        meta: {
+            layout: 'admin',
+            requiresAuth: true,
+            roles: [...ADMIN_ROLES],
+            title: 'Согласование',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         component: () => import('@/pages/public/NotFoundPage.vue'),
