@@ -177,6 +177,11 @@ watch(id, load);
           Настраиваемые поля
         </el-button>
         <el-button
+          @click="router.push({ name: 'admin.procedureExtraConditions', params: { id: procedure.id } })"
+        >
+          Доп. условия
+        </el-button>
+        <el-button
           @click="router.push({ name: 'admin.changeLogs', params: { id: procedure.id } })"
         >
           Согласование правок

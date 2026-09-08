@@ -134,22 +134,29 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="etp-page">
-    <div class="etp-card register-card">
+  <div>
       <template v-if="registeredOk">
-        <h1>Проверьте email</h1>
+        <div class="text-center mb-10">
+          <h1 class="text-dark mb-3">Проверьте email</h1>
+        </div>
         <p>
           Мы отправили письмо для подтверждения адреса.
           После подтверждения администратор одобрит доступ к площадке.
         </p>
         <p class="muted">В dev письма смотрите в MailHog: http://localhost:8025</p>
-        <el-button type="primary" @click="$router.push({ name: 'login' })">
+        <el-button type="primary" class="w-100" @click="$router.push({ name: 'login' })">
           К входу
         </el-button>
       </template>
 
       <template v-else>
-        <h1>Регистрация участника</h1>
+        <div class="text-center mb-10">
+          <h1 class="text-dark mb-3">Регистрация участника</h1>
+          <div class="text-gray-400 fw-bold fs-4">
+            Уже есть аккаунт?
+            <router-link :to="{ name: 'login' }" class="link-primary fw-bolder">Войти</router-link>
+          </div>
+        </div>
         <p class="muted">Все поля обязательны, кроме даты рождения руководителя и доп. email.</p>
 
         <el-form
@@ -266,33 +273,19 @@ async function onSubmit() {
             type="primary"
             native-type="submit"
             :loading="auth.isSubmitting"
-            style="width: 100%"
+            class="w-100"
+            size="large"
           >
             Зарегистрироваться
           </el-button>
         </el-form>
-
-        <p class="footer-link">
-          Уже есть аккаунт?
-          <router-link :to="{ name: 'login' }">Войти</router-link>
-        </p>
       </template>
-    </div>
   </div>
 </template>
 
 <style scoped>
-.register-card {
-  max-width: 720px;
-}
-
-.muted,
-.footer-link {
+.muted {
   color: #6b7280;
   font-size: 0.9rem;
-}
-
-.footer-link {
-  margin-top: 1rem;
 }
 </style>

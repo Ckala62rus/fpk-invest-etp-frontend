@@ -93,6 +93,9 @@ const urls = {
     adminCustomFields: (procedureId) => `/admin/procedures/${procedureId}/custom-fields`,
     adminCustomField: (procedureId, fieldId) => `/admin/procedures/${procedureId}/custom-fields/${fieldId}`,
     adminExternalInvites: (procedureId) => `/admin/procedures/${procedureId}/external-invites`,
+    adminProcedureExtraConditions: (procedureId) => `/admin/procedures/${procedureId}/extra-conditions`,
+    adminExtraConditionTemplates: '/admin/extra-condition-templates',
+    adminExtraConditionTemplate: (id) => `/admin/extra-condition-templates/${id}`,
 
     adminCmsPages: '/admin/cms-pages',
     adminCmsPage: (id) => `/admin/cms-pages/${id}`,

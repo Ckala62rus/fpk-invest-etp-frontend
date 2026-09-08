@@ -1,7 +1,6 @@
 <script setup>
 /**
- * Публичный layout: шапка витрины ЭТП для гостей и общих страниц.
- * Пункты CMS подтягиваются из GET /cms/pages.
+ * Публичный layout в стиле Metronic header (горизонтальное меню витрины).
  */
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -10,9 +9,8 @@ import cmsApi from '@/api/modules/cms';
 
 const auth = useAuthStore();
 const router = useRouter();
-
-/** @type {import('vue').Ref<Array<{ slug: string, title: string }>>} */
 const cmsLinks = ref([]);
+const mobileOpen = ref(false);
 
 const cabinetTarget = computed(() => {
     if (!auth.isAuth) {
@@ -21,8 +19,15 @@ const cabinetTarget = computed(() => {
     return auth.isAdminArea ? { name: 'admin.dashboard' } : { name: 'cabinet' };
 });
 
+const displayName = computed(() => {
+    const u = auth.user;
+    if (!u) {
+        return 'Гость';
+    }
+    return u.profile?.name || u.email || u.inn || 'Пользователь';
+});
+
 /**
- * Загружает список опубликованных страниц CMS для меню.
  * @returns {Promise<void>}
  */
 async function loadCmsNav() {
@@ -39,7 +44,6 @@ async function loadCmsNav() {
 }
 
 /**
- * Выход и возврат на главную.
  * @returns {Promise<void>}
  */
 async function onLogout() {
@@ -51,89 +55,194 @@ onMounted(loadCmsNav);
 </script>
 
 <template>
-  <div class="public-layout">
-    <header class="public-layout__header">
-      <router-link class="public-layout__brand" :to="{ name: 'home' }">
-        ЭТП ФПК «Инвест»
-      </router-link>
-      <nav class="public-layout__nav">
-        <router-link :to="{ name: 'home' }">Главная</router-link>
-        <router-link :to="{ name: 'procedures.index' }">Процедуры</router-link>
-        <router-link
-          v-for="page in cmsLinks"
-          :key="page.slug"
-          :to="{ name: 'cms.show', params: { slug: page.slug } }"
-        >
-          {{ page.title }}
-        </router-link>
-        <router-link :to="{ name: 'complaint' }">Жалоба</router-link>
-        <router-link v-if="!auth.isAuth" :to="{ name: 'login' }">Вход</router-link>
-        <router-link v-if="!auth.isAuth" :to="{ name: 'register' }">Регистрация</router-link>
-        <router-link v-if="auth.isAuth" :to="cabinetTarget">Кабинет</router-link>
-        <el-button v-if="auth.isAuth" link type="danger" @click="onLogout">Выход</el-button>
-      </nav>
-    </header>
-    <main class="public-layout__main">
-      <slot />
-    </main>
-    <footer class="public-layout__footer">
-      © ЭТП — электронная торговая площадка ·
-      <router-link :to="{ name: 'corruption' }">Антикоррупция</router-link>
-    </footer>
+  <div class="d-flex flex-column flex-root public-root">
+    <div class="page d-flex flex-row flex-column-fluid">
+      <div class="wrapper d-flex flex-column flex-row-fluid w-100">
+        <div id="kt_header" class="header align-items-stretch border-0">
+          <div class="container-xxl d-flex align-items-stretch justify-content-between">
+            <div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0 me-lg-15">
+              <router-link :to="{ name: 'home' }" class="d-flex align-items-center">
+                <img
+                  alt="ЭТП"
+                  src="/metronic/media/logos/logo-2.svg"
+                  class="h-25px h-lg-30px"
+                />
+                <span class="text-white fw-bolder fs-4 ms-3 d-none d-md-inline">
+                  ЭТП ФПК «Инвест»
+                </span>
+              </router-link>
+            </div>
+
+            <div class="d-flex align-items-stretch justify-content-between flex-lg-grow-1">
+              <div class="d-flex align-items-stretch" :class="{ 'mobile-nav-open': mobileOpen }">
+                <nav class="header-menu align-items-stretch">
+                  <div class="menu menu-lg-rounded menu-column menu-lg-row menu-state-bg menu-title-gray-700 menu-state-title-primary fw-bold my-5 my-lg-0 align-items-stretch">
+                    <div class="menu-item me-lg-1">
+                      <router-link
+                        class="menu-link py-3"
+                        :to="{ name: 'home' }"
+                        @click="mobileOpen = false"
+                      >
+                        <span class="menu-title">Главная</span>
+                      </router-link>
+                    </div>
+                    <div class="menu-item me-lg-1">
+                      <router-link
+                        class="menu-link py-3"
+                        :to="{ name: 'procedures.index' }"
+                        @click="mobileOpen = false"
+                      >
+                        <span class="menu-title">Процедуры</span>
+                      </router-link>
+                    </div>
+                    <div
+                      v-for="page in cmsLinks"
+                      :key="page.slug"
+                      class="menu-item me-lg-1"
+                    >
+                      <router-link
+                        class="menu-link py-3"
+                        :to="{ name: 'cms.show', params: { slug: page.slug } }"
+                        @click="mobileOpen = false"
+                      >
+                        <span class="menu-title">{{ page.title }}</span>
+                      </router-link>
+                    </div>
+                    <div class="menu-item me-lg-1">
+                      <router-link
+                        class="menu-link py-3"
+                        :to="{ name: 'complaint' }"
+                        @click="mobileOpen = false"
+                      >
+                        <span class="menu-title">Жалоба</span>
+                      </router-link>
+                    </div>
+                  </div>
+                </nav>
+              </div>
+
+              <div class="d-flex align-items-stretch flex-shrink-0">
+                <div class="d-flex align-items-center ms-1 ms-lg-3">
+                  <button
+                    type="button"
+                    class="btn btn-icon btn-active-light-primary d-lg-none"
+                    @click="mobileOpen = !mobileOpen"
+                  >
+                    <span class="svg-icon svg-icon-1">☰</span>
+                  </button>
+                </div>
+                <div class="d-flex align-items-center ms-1 ms-lg-3">
+                  <template v-if="!auth.isAuth">
+                    <router-link
+                      :to="{ name: 'login' }"
+                      class="btn btn-sm btn-light-primary fw-bolder me-2"
+                    >
+                      Вход
+                    </router-link>
+                    <router-link
+                      :to="{ name: 'register' }"
+                      class="btn btn-sm btn-primary fw-bolder"
+                    >
+                      Регистрация
+                    </router-link>
+                  </template>
+                  <template v-else>
+                    <span class="text-gray-600 fw-bold me-3 d-none d-md-inline">
+                      {{ displayName }}
+                    </span>
+                    <router-link
+                      :to="cabinetTarget"
+                      class="btn btn-sm btn-light-primary fw-bolder me-2"
+                    >
+                      Кабинет
+                    </router-link>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-light-danger fw-bolder"
+                      @click="onLogout"
+                    >
+                      Выход
+                    </button>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content d-flex flex-column flex-column-fluid">
+          <div class="container-xxl py-5">
+            <slot />
+          </div>
+        </div>
+
+        <div class="footer py-4 d-flex flex-lg-column">
+          <div class="container-xxl d-flex flex-column flex-md-row align-items-center justify-content-between">
+            <div class="text-dark order-2 order-md-1">
+              <span class="text-muted fw-bold me-1">©</span>
+              <span class="text-gray-800 text-hover-primary">ЭТП ФПК «Инвест»</span>
+            </div>
+            <ul class="menu menu-gray-600 menu-hover-primary fw-bold order-1">
+              <li class="menu-item">
+                <router-link :to="{ name: 'corruption' }" class="menu-link px-2">
+                  Антикоррупция
+                </router-link>
+              </li>
+              <li class="menu-item">
+                <router-link
+                  :to="{ name: 'cms.show', params: { slug: 'contacts' } }"
+                  class="menu-link px-2"
+                >
+                  Контакты
+                </router-link>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.public-layout {
+.public-root {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  background: #f5f8fa;
 }
 
-.public-layout__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.85rem 1.5rem;
-  background: #111827;
-  color: #fff;
+#kt_header {
+  background: #1e1e2d;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 }
 
-.public-layout__brand {
-  color: #fff;
-  font-weight: 700;
-  white-space: nowrap;
+.header-menu .menu-link {
+  color: #9899ac !important;
 }
 
-.public-layout__nav {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  flex-wrap: wrap;
+.header-menu .menu-link.router-link-active,
+.header-menu .menu-link:hover {
+  color: #fff !important;
 }
 
-.public-layout__nav a {
-  color: #e5e7eb;
+.footer {
+  background: #fff;
+  border-top: 1px solid #eff2f5;
 }
 
-.public-layout__nav a.router-link-active {
-  color: #93c5fd;
-}
+@media (max-width: 991px) {
+  .header-menu {
+    display: none;
+    position: absolute;
+    top: 65px;
+    left: 0;
+    right: 0;
+    background: #1e1e2d;
+    z-index: 100;
+    padding: 1rem;
+  }
 
-.public-layout__main {
-  flex: 1;
-}
-
-.public-layout__footer {
-  padding: 1rem 1.5rem;
-  text-align: center;
-  color: #6b7280;
-  font-size: 0.875rem;
-}
-
-.public-layout__footer a {
-  color: #6b7280;
-  text-decoration: underline;
+  .mobile-nav-open .header-menu {
+    display: block;
+  }
 }
 </style>

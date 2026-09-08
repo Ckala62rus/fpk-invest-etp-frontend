@@ -1,15 +1,20 @@
 <script setup>
 /**
- * Layout кабинета участника: боковое меню ЛК.
+ * Layout кабинета участника — Metronic aside (как админка, светлее по смыслу ЛК).
  */
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 
 const auth = useAuthStore();
 const router = useRouter();
 
+const displayName = computed(() => {
+    const u = auth.user;
+    return u?.profile?.name || u?.email || u?.inn || 'Участник';
+});
+
 /**
- * Выход из кабинета.
  * @returns {Promise<void>}
  */
 async function onLogout() {
@@ -19,69 +24,113 @@ async function onLogout() {
 </script>
 
 <template>
-  <div class="cabinet-layout">
-    <aside class="cabinet-layout__aside">
-      <div class="cabinet-layout__title">Кабинет участника</div>
-      <nav>
-        <router-link :to="{ name: 'cabinet' }">Обзор</router-link>
-        <router-link :to="{ name: 'cabinet.profile' }">Профиль</router-link>
-        <router-link :to="{ name: 'cabinet.subscriptions' }">Подписки</router-link>
-        <router-link :to="{ name: 'cabinet.notifications' }">Уведомления</router-link>
-        <router-link :to="{ name: 'cabinet.proposals' }">Мои КП</router-link>
-        <router-link :to="{ name: 'home' }">На витрину</router-link>
-        <router-link v-if="auth.isAdminArea" :to="{ name: 'admin.dashboard' }">
-          В админку
-        </router-link>
-      </nav>
-      <el-button class="cabinet-layout__logout" @click="onLogout">Выход</el-button>
-    </aside>
-    <main class="cabinet-layout__main">
-      <slot />
-    </main>
+  <div class="d-flex flex-column flex-root">
+    <div class="page d-flex flex-row flex-column-fluid">
+      <div class="aside aside-dark aside-hoverable cabinet-aside">
+        <div class="aside-logo flex-column-auto px-6 pt-8 pb-4">
+          <span class="text-white fw-bolder fs-5">Кабинет участника</span>
+        </div>
+        <div class="aside-menu flex-column-fluid px-3">
+          <div class="menu menu-column">
+            <div class="menu-item">
+              <router-link class="menu-link" :to="{ name: 'cabinet' }">
+                <span class="menu-title">Обзор</span>
+              </router-link>
+            </div>
+            <div class="menu-item">
+              <router-link class="menu-link" :to="{ name: 'cabinet.profile' }">
+                <span class="menu-title">Профиль</span>
+              </router-link>
+            </div>
+            <div class="menu-item">
+              <router-link class="menu-link" :to="{ name: 'cabinet.subscriptions' }">
+                <span class="menu-title">Подписки</span>
+              </router-link>
+            </div>
+            <div class="menu-item">
+              <router-link class="menu-link" :to="{ name: 'cabinet.notifications' }">
+                <span class="menu-title">Уведомления</span>
+              </router-link>
+            </div>
+            <div class="menu-item">
+              <router-link class="menu-link" :to="{ name: 'cabinet.proposals' }">
+                <span class="menu-title">Мои КП</span>
+              </router-link>
+            </div>
+            <div class="menu-item">
+              <router-link class="menu-link" :to="{ name: 'home' }">
+                <span class="menu-title">На витрину</span>
+              </router-link>
+            </div>
+            <div v-if="auth.isAdminArea" class="menu-item">
+              <router-link class="menu-link" :to="{ name: 'admin.dashboard' }">
+                <span class="menu-title">В админку</span>
+              </router-link>
+            </div>
+          </div>
+        </div>
+        <div class="aside-footer px-5 pb-5">
+          <button type="button" class="btn btn-primary w-100" @click="onLogout">Выход</button>
+        </div>
+      </div>
+
+      <div class="wrapper d-flex flex-column flex-row-fluid">
+        <div class="header align-items-stretch bg-white border-bottom">
+          <div class="container-fluid d-flex align-items-center justify-content-between min-h-65px">
+            <h1 class="text-dark fw-bolder fs-3 my-1">Личный кабинет</h1>
+            <span class="text-gray-600 fw-bold">{{ displayName }}</span>
+          </div>
+        </div>
+        <div class="content d-flex flex-column flex-column-fluid">
+          <div class="container-xxl py-5">
+            <slot />
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.cabinet-layout {
+.cabinet-aside {
+  width: 250px;
+  background: #1e1e2d;
   min-height: 100vh;
-  display: grid;
-  grid-template-columns: 240px 1fr;
-}
-
-.cabinet-layout__aside {
-  background: #1e293b;
-  color: #fff;
-  padding: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
 }
 
-.cabinet-layout__title {
-  font-weight: 700;
+.menu-link {
+  color: #9899ac !important;
+  padding: 0.65rem 1rem;
+  border-radius: 0.475rem;
+  display: flex;
 }
 
-.cabinet-layout__aside a {
-  display: block;
-  color: #cbd5e1;
-  margin-bottom: 0.5rem;
+.menu-link.router-link-active,
+.menu-link:hover {
+  color: #fff !important;
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.cabinet-layout__aside a.router-link-active {
-  color: #93c5fd;
+.wrapper {
+  background: #f5f8fa;
+  flex: 1;
+  min-height: 100vh;
 }
 
-.cabinet-layout__logout {
-  margin-top: auto;
+.min-h-65px {
+  min-height: 65px;
 }
 
-.cabinet-layout__main {
-  padding: 1.5rem;
-}
+@media (max-width: 991px) {
+  .page {
+    flex-direction: column;
+  }
 
-@media (max-width: 768px) {
-  .cabinet-layout {
-    grid-template-columns: 1fr;
+  .cabinet-aside {
+    width: 100%;
+    min-height: auto;
   }
 }
 </style>

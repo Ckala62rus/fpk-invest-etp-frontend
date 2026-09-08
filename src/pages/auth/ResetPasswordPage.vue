@@ -1,6 +1,6 @@
 <script setup>
 /**
- * Установка нового пароля по одноразовому токену из письма.
+ * Установка нового пароля по токену (AuthLayout Metronic).
  */
 import { onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -73,58 +73,41 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="etp-page">
-    <div class="etp-card card">
-      <h1>Новый пароль</h1>
-      <p class="hint">Вставьте токен из письма и задайте новый пароль.</p>
+  <div class="text-center mb-10">
+    <h1 class="text-dark mb-3">Новый пароль</h1>
+    <div class="text-gray-400 fw-bold fs-6">Токен из письма и новый пароль</div>
+  </div>
 
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-position="top"
-        @submit.prevent="onSubmit"
-      >
-        <el-form-item label="Токен" prop="token">
-          <el-input v-model="form.token" type="textarea" :rows="2" />
-        </el-form-item>
-        <el-form-item label="Новый пароль" prop="password">
-          <el-input v-model="form.password" type="password" show-password autocomplete="new-password" />
-        </el-form-item>
-        <el-form-item label="Подтверждение" prop="password_confirmation">
-          <el-input
-            v-model="form.password_confirmation"
-            type="password"
-            show-password
-            autocomplete="new-password"
-          />
-        </el-form-item>
-        <el-button type="primary" native-type="submit" :loading="loading" style="width: 100%">
-          Сохранить пароль
-        </el-button>
-      </el-form>
+  <el-form
+    ref="formRef"
+    :model="form"
+    :rules="rules"
+    label-position="top"
+    @submit.prevent="onSubmit"
+  >
+    <el-form-item label="Токен" prop="token">
+      <el-input v-model="form.token" type="textarea" :rows="2" />
+    </el-form-item>
+    <el-form-item label="Новый пароль" prop="password">
+      <el-input v-model="form.password" type="password" show-password size="large" autocomplete="new-password" />
+    </el-form-item>
+    <el-form-item label="Подтверждение" prop="password_confirmation">
+      <el-input
+        v-model="form.password_confirmation"
+        type="password"
+        show-password
+        size="large"
+        autocomplete="new-password"
+      />
+    </el-form-item>
+    <el-button type="primary" native-type="submit" size="large" :loading="loading" class="w-100">
+      Сохранить пароль
+    </el-button>
+  </el-form>
 
-      <p class="footer">
-        <router-link :to="{ name: 'password.forgot' }">Запросить токен снова</router-link>
-        ·
-        <router-link :to="{ name: 'login' }">Вход</router-link>
-      </p>
-    </div>
+  <div class="text-center mt-8 text-gray-400 fw-bold fs-6">
+    <router-link :to="{ name: 'password.forgot' }" class="link-primary">Запросить токен</router-link>
+    ·
+    <router-link :to="{ name: 'login' }" class="link-primary">Вход</router-link>
   </div>
 </template>
-
-<style scoped>
-.card {
-  max-width: 420px;
-}
-
-.hint,
-.footer {
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-
-.footer {
-  margin-top: 1rem;
-}
-</style>

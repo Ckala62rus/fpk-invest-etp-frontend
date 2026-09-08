@@ -1,6 +1,6 @@
 <script setup>
 /**
- * Обращение к администратору для восстановления доступа по ИНН.
+ * Обращение к администратору по ИНН (AuthLayout Metronic).
  */
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -46,53 +46,34 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="etp-page">
-    <div class="etp-card card">
-      <h1>Обращение к администратору</h1>
-      <p class="hint">
-        Если нет доступа к email — укажите ИНН (идентификационный номер налогоплательщика)
-        и кратко опишите проблему.
-      </p>
-
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-position="top"
-        @submit.prevent="onSubmit"
-      >
-        <el-form-item label="ИНН" prop="inn">
-          <el-input v-model="form.inn" maxlength="12" autocomplete="username" />
-        </el-form-item>
-        <el-form-item label="Сообщение">
-          <el-input v-model="form.message" type="textarea" :rows="4" maxlength="5000" />
-        </el-form-item>
-        <el-button type="primary" native-type="submit" :loading="loading" style="width: 100%">
-          Отправить
-        </el-button>
-      </el-form>
-
-      <p class="footer">
-        <router-link :to="{ name: 'password.forgot' }">Восстановить по email</router-link>
-        ·
-        <router-link :to="{ name: 'login' }">Вход</router-link>
-      </p>
+  <div class="text-center mb-10">
+    <h1 class="text-dark mb-3">Обращение к администратору</h1>
+    <div class="text-gray-400 fw-bold fs-6">
+      Если нет доступа к email — укажите ИНН и опишите проблему
     </div>
   </div>
+
+  <el-form
+    ref="formRef"
+    :model="form"
+    :rules="rules"
+    label-position="top"
+    @submit.prevent="onSubmit"
+  >
+    <el-form-item label="ИНН" prop="inn">
+      <el-input v-model="form.inn" maxlength="12" size="large" autocomplete="username" />
+    </el-form-item>
+    <el-form-item label="Сообщение">
+      <el-input v-model="form.message" type="textarea" :rows="4" maxlength="5000" />
+    </el-form-item>
+    <el-button type="primary" native-type="submit" size="large" :loading="loading" class="w-100">
+      Отправить
+    </el-button>
+  </el-form>
+
+  <div class="text-center mt-8 text-gray-400 fw-bold fs-6">
+    <router-link :to="{ name: 'password.forgot' }" class="link-primary">По email</router-link>
+    ·
+    <router-link :to="{ name: 'login' }" class="link-primary">Вход</router-link>
+  </div>
 </template>
-
-<style scoped>
-.card {
-  max-width: 420px;
-}
-
-.hint,
-.footer {
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-
-.footer {
-  margin-top: 1rem;
-}
-</style>

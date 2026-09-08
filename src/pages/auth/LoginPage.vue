@@ -1,6 +1,6 @@
 <script setup>
 /**
- * Форма входа по ИНН и паролю (Sanctum SPA).
+ * Форма входа по ИНН и паролю — полноэкранный Metronic-каркас (AuthLayout).
  */
 import { reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -11,7 +11,6 @@ const auth = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 
-/** Поля формы */
 const form = reactive({
     inn: '',
     password: '',
@@ -19,7 +18,6 @@ const form = reactive({
 
 const formRef = ref(null);
 
-/** Правила Element Plus Form */
 const rules = {
     inn: [{ required: true, message: 'Укажите ИНН', trigger: 'blur' }],
     password: [{ required: true, message: 'Укажите пароль', trigger: 'blur' }],
@@ -63,62 +61,60 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="etp-page">
-    <div class="etp-card login-card">
-      <h1>Вход</h1>
-      <p class="login-card__hint">ИНН и пароль учётной записи ЭТП</p>
-
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-position="top"
-        @submit.prevent="onSubmit"
-      >
-        <el-form-item label="ИНН" prop="inn">
-          <el-input v-model="form.inn" autocomplete="username" />
-        </el-form-item>
-        <el-form-item label="Пароль" prop="password">
-          <el-input
-            v-model="form.password"
-            type="password"
-            show-password
-            autocomplete="current-password"
-          />
-        </el-form-item>
-        <el-button
-          type="primary"
-          native-type="submit"
-          :loading="auth.isSubmitting"
-          style="width: 100%"
-        >
-          Войти
-        </el-button>
-      </el-form>
-
-      <p class="login-card__footer">
-        <router-link :to="{ name: 'password.forgot' }">Забыли пароль?</router-link>
-      </p>
-      <p class="login-card__footer">
-        Нет аккаунта?
-        <router-link :to="{ name: 'register' }">Регистрация</router-link>
-      </p>
+  <div class="text-center mb-10">
+    <h1 class="text-dark mb-3">Вход на ЭТП</h1>
+    <div class="text-gray-400 fw-bold fs-4">
+      Нет аккаунта?
+      <router-link :to="{ name: 'register' }" class="link-primary fw-bolder">
+        Регистрация
+      </router-link>
     </div>
   </div>
+
+  <el-form
+    ref="formRef"
+    :model="form"
+    :rules="rules"
+    label-position="top"
+    class="form w-100"
+    @submit.prevent="onSubmit"
+  >
+    <el-form-item label="ИНН" prop="inn" class="mb-8">
+      <el-input
+        v-model="form.inn"
+        size="large"
+        autocomplete="username"
+        placeholder="ИНН организации"
+      />
+    </el-form-item>
+    <el-form-item prop="password" class="mb-8">
+      <template #label>
+        <div class="d-flex flex-stack w-100">
+          <span>Пароль</span>
+          <router-link :to="{ name: 'password.forgot' }" class="link-primary fs-6 fw-bolder">
+            Забыли пароль?
+          </router-link>
+        </div>
+      </template>
+      <el-input
+        v-model="form.password"
+        type="password"
+        size="large"
+        show-password
+        autocomplete="current-password"
+        placeholder="Пароль"
+      />
+    </el-form-item>
+    <div class="text-center">
+      <el-button
+        type="primary"
+        size="large"
+        native-type="submit"
+        :loading="auth.isSubmitting"
+        class="w-100"
+      >
+        Войти
+      </el-button>
+    </div>
+  </el-form>
 </template>
-
-<style scoped>
-.login-card {
-  max-width: 420px;
-}
-
-.login-card__hint,
-.login-card__footer {
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-
-.login-card__footer {
-  margin-top: 1rem;
-}
-</style>

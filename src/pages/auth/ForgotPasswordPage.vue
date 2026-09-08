@@ -1,6 +1,6 @@
 <script setup>
 /**
- * Запрос инструкции восстановления пароля по email.
+ * Запрос инструкции восстановления пароля по email (AuthLayout Metronic).
  */
 import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -45,49 +45,33 @@ async function onSubmit() {
 </script>
 
 <template>
-  <div class="etp-page">
-    <div class="etp-card card">
-      <h1>Восстановление пароля</h1>
-      <p class="hint">Укажите email учётной записи — пришлём токен для смены пароля.</p>
-
-      <el-form
-        ref="formRef"
-        :model="form"
-        :rules="rules"
-        label-position="top"
-        @submit.prevent="onSubmit"
-      >
-        <el-form-item label="Email" prop="email">
-          <el-input v-model="form.email" type="email" autocomplete="email" />
-        </el-form-item>
-        <el-button type="primary" native-type="submit" :loading="loading" style="width: 100%">
-          Отправить
-        </el-button>
-      </el-form>
-
-      <p class="footer">
-        <router-link :to="{ name: 'password.reset' }">Уже есть токен</router-link>
-        ·
-        <router-link :to="{ name: 'password.admin-request' }">Обратиться к администратору</router-link>
-        ·
-        <router-link :to="{ name: 'login' }">Вход</router-link>
-      </p>
+  <div class="text-center mb-10">
+    <h1 class="text-dark mb-3">Восстановление пароля</h1>
+    <div class="text-gray-400 fw-bold fs-6">
+      Укажите email — пришлём токен для смены пароля
     </div>
   </div>
+
+  <el-form
+    ref="formRef"
+    :model="form"
+    :rules="rules"
+    label-position="top"
+    @submit.prevent="onSubmit"
+  >
+    <el-form-item label="Email" prop="email">
+      <el-input v-model="form.email" type="email" size="large" autocomplete="email" />
+    </el-form-item>
+    <el-button type="primary" native-type="submit" size="large" :loading="loading" class="w-100">
+      Отправить
+    </el-button>
+  </el-form>
+
+  <div class="text-center mt-8 text-gray-400 fw-bold fs-6">
+    <router-link :to="{ name: 'password.reset' }" class="link-primary">Уже есть токен</router-link>
+    ·
+    <router-link :to="{ name: 'password.admin-request' }" class="link-primary">К администратору</router-link>
+    ·
+    <router-link :to="{ name: 'login' }" class="link-primary">Вход</router-link>
+  </div>
 </template>
-
-<style scoped>
-.card {
-  max-width: 420px;
-}
-
-.hint,
-.footer {
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-
-.footer {
-  margin-top: 1rem;
-}
-</style>
