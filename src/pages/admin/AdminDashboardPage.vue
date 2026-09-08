@@ -35,10 +35,19 @@ const auth = useAuthStore();
       <el-button @click="$router.push({ name: 'admin.procedures' })">
         ТЗП
       </el-button>
+      <el-button
+        v-if="auth.hasRole(ROLES.SUPER_ADMIN)"
+        @click="$router.push({ name: 'admin.cms' })"
+      >
+        CMS
+      </el-button>
+      <el-button @click="$router.push({ name: 'admin.activity' })">
+        Аудит
+      </el-button>
     </el-space>
 
     <p class="hint">
-      Дальше в F3: допуск КП, CMS, аудит, lifecycle аукциона, отчёты.
+      Осталось в F3: шаблоны писем, отчёты, опросы, лоты CRUD. F4 — аудитор.
     </p>
   </div>
 </template>

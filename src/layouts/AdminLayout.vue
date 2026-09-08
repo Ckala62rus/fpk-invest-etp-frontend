@@ -34,6 +34,8 @@ async function onLogout() {
           Классификатор
         </router-link>
         <router-link :to="{ name: 'admin.procedures' }">ТЗП</router-link>
+        <router-link v-if="isSuperAdmin" :to="{ name: 'admin.cms' }">CMS</router-link>
+        <router-link :to="{ name: 'admin.activity' }">Аудит</router-link>
         <router-link :to="{ name: 'home' }">Витрина</router-link>
         <router-link :to="{ name: 'cabinet' }">Кабинет</router-link>
       </nav>
