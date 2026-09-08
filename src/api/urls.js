@@ -50,9 +50,25 @@ const urls = {
     proposalDocument: (proposalId, documentId) => `/proposals/${proposalId}/documents/${documentId}`,
     proposalMessages: (proposalId) => `/proposals/${proposalId}/messages`,
 
-    // --- Админка (фрагмент; дополняем по мере F3) ---
+    // --- Админка ---
     adminUsers: '/admin/users',
+    adminUserApprove: (id) => `/admin/users/${id}/approve`,
+    adminUserBlock: (id) => `/admin/users/${id}/block`,
+    adminUserUnblock: (id) => `/admin/users/${id}/unblock`,
+    adminUserRoles: (id) => `/admin/users/${id}/roles`,
+
+    adminCompanyGroups: '/admin/company-groups',
+    adminCompanyGroup: (id) => `/admin/company-groups/${id}`,
+    adminClassifierCategories: '/admin/classifier-categories',
+    adminClassifierCategory: (id) => `/admin/classifier-categories/${id}`,
+    adminCompanies: '/admin/companies',
+    adminCompany: (id) => `/admin/companies/${id}`,
+
     adminProcedures: '/admin/procedures',
+    adminProcedure: (id) => `/admin/procedures/${id}`,
+    adminProcedurePublish: (id) => `/admin/procedures/${id}/publish`,
+    adminProcedureRestore: (id) => `/admin/procedures/${id}/restore`,
+
     adminActivityLogs: '/admin/activity-logs',
     adminSettings: '/admin/settings',
 };

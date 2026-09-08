@@ -166,6 +166,50 @@ const routes = [
         },
     },
     {
+        path: '/admin/users',
+        name: 'admin.users',
+        component: () => import('@/pages/admin/AdminUsersPage.vue'),
+        meta: {
+            layout: 'admin',
+            requiresAuth: true,
+            roles: [...ADMIN_ROLES],
+            title: 'Пользователи',
+        },
+    },
+    {
+        path: '/admin/classifier',
+        name: 'admin.classifier',
+        component: () => import('@/pages/admin/AdminClassifierPage.vue'),
+        meta: {
+            layout: 'admin',
+            requiresAuth: true,
+            roles: [ROLES.SUPER_ADMIN],
+            title: 'Классификатор',
+        },
+    },
+    {
+        path: '/admin/procedures',
+        name: 'admin.procedures',
+        component: () => import('@/pages/admin/AdminProceduresPage.vue'),
+        meta: {
+            layout: 'admin',
+            requiresAuth: true,
+            roles: [...ADMIN_ROLES],
+            title: 'ТЗП',
+        },
+    },
+    {
+        path: '/admin/procedures/:id',
+        name: 'admin.procedures.show',
+        component: () => import('@/pages/admin/AdminProcedureShowPage.vue'),
+        meta: {
+            layout: 'admin',
+            requiresAuth: true,
+            roles: [...ADMIN_ROLES],
+            title: 'ТЗП',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         component: () => import('@/pages/public/NotFoundPage.vue'),

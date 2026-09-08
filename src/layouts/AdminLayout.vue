@@ -5,12 +5,13 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { ROLES } from '@/constants/roles';
 
 const auth = useAuthStore();
 const router = useRouter();
 
-/** Подпись ролей в шапке админки */
 const rolesLabel = computed(() => auth.roles.join(', ') || '—');
+const isSuperAdmin = computed(() => auth.hasRole(ROLES.SUPER_ADMIN));
 
 /**
  * Выход из админки.
@@ -28,6 +29,11 @@ async function onLogout() {
       <div class="admin-layout__brand">Админка ЭТП</div>
       <nav>
         <router-link :to="{ name: 'admin.dashboard' }">Дашборд</router-link>
+        <router-link :to="{ name: 'admin.users' }">Пользователи</router-link>
+        <router-link v-if="isSuperAdmin" :to="{ name: 'admin.classifier' }">
+          Классификатор
+        </router-link>
+        <router-link :to="{ name: 'admin.procedures' }">ТЗП</router-link>
         <router-link :to="{ name: 'home' }">Витрина</router-link>
         <router-link :to="{ name: 'cabinet' }">Кабинет</router-link>
       </nav>
