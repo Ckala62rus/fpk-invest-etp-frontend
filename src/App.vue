@@ -41,7 +41,8 @@ watchEffect(() => {
         body.className = 'header-fixed header-tablet-and-mobile-fixed toolbar-enabled aside-enabled aside-fixed';
         return;
     }
-    body.className = 'header-fixed header-tablet-and-mobile-fixed toolbar-enabled';
+    // Витрина: без Metronic aside-классов — chrome example
+    body.className = 'bg-body';
 });
 </script>
 
