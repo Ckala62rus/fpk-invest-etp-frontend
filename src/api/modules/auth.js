@@ -59,10 +59,32 @@ const passwordForgot = async (payload) => {
     return apiClient.post(urls.passwordForgot, payload);
 };
 
+/**
+ * Установка нового пароля по токену из письма.
+ * @param {{ token: string, password: string, password_confirmation: string }} payload Данные
+ * @returns {Promise<import('axios').AxiosResponse>}
+ */
+const passwordReset = async (payload) => {
+    await fetchCsrfCookie();
+    return apiClient.post(urls.passwordReset, payload);
+};
+
+/**
+ * Обращение к администратору для сброса пароля по ИНН.
+ * @param {{ inn: string, message?: string }} payload Данные
+ * @returns {Promise<import('axios').AxiosResponse>}
+ */
+const passwordAdminRequest = async (payload) => {
+    await fetchCsrfCookie();
+    return apiClient.post(urls.passwordAdminRequest, payload);
+};
+
 export default {
     login,
     register,
     me,
     logout,
     passwordForgot,
+    passwordReset,
+    passwordAdminRequest,
 };

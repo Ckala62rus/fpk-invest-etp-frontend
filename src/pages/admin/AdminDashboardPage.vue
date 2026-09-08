@@ -1,11 +1,12 @@
 <script setup>
 /**
- * Дашборд админки: ссылки на разделы F3/F4.
+ * Дашборд админки: ссылки на разделы F3/F4 и Horizon.
  */
 import { useAuthStore } from '@/stores/auth';
 import { ROLES } from '@/constants/roles';
 
 const auth = useAuthStore();
+const horizonUrl = import.meta.env.VITE_HORIZON_URL || 'http://localhost:8200/horizon';
 </script>
 
 <template>
@@ -37,10 +38,19 @@ const auth = useAuthStore();
       </el-button>
       <el-button @click="$router.push({ name: 'admin.reports' })">Отчёты</el-button>
       <el-button @click="$router.push({ name: 'admin.activity' })">Аудит</el-button>
+      <el-button
+        v-if="auth.hasRole(ROLES.SUPER_ADMIN)"
+        tag="a"
+        :href="horizonUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Horizon
+      </el-button>
     </el-space>
 
     <p class="hint">
-      Согласование правок документации — на карточке ТЗП → «Согласование правок» (F4).
+      На карточке ТЗП: лоты, настраиваемые поля, внешние приглашения, согласование правок (F4), аукцион.
     </p>
   </div>
 </template>

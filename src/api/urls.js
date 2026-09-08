@@ -90,6 +90,10 @@ const urls = {
     adminChangeLogApprove: (procedureId, changeLogId) => `/admin/procedures/${procedureId}/change-logs/${changeLogId}/approve`,
     adminChangeLogReject: (procedureId, changeLogId) => `/admin/procedures/${procedureId}/change-logs/${changeLogId}/reject`,
 
+    adminCustomFields: (procedureId) => `/admin/procedures/${procedureId}/custom-fields`,
+    adminCustomField: (procedureId, fieldId) => `/admin/procedures/${procedureId}/custom-fields/${fieldId}`,
+    adminExternalInvites: (procedureId) => `/admin/procedures/${procedureId}/external-invites`,
+
     adminCmsPages: '/admin/cms-pages',
     adminCmsPage: (id) => `/admin/cms-pages/${id}`,
 

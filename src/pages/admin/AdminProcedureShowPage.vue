@@ -6,6 +6,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import adminProceduresApi from '@/api/modules/adminProcedures';
+import adminProcedureExtrasApi from '@/api/modules/adminProcedureExtras';
 import { ROLES } from '@/constants/roles';
 import { useAuthStore } from '@/stores/auth';
 import { formatDateTime } from '@/helpers/format';
@@ -19,6 +20,9 @@ const canWrite = computed(() => auth.hasRole([ROLES.SUPER_ADMIN, ROLES.TRADE_ADM
 const loading = ref(false);
 const saving = ref(false);
 const procedure = ref(null);
+const inviteVisible = ref(false);
+const inviteEmailsText = ref('');
+const inviteSending = ref(false);
 
 const form = reactive({
     title: '',
@@ -96,6 +100,41 @@ async function onPublish() {
     }
 }
 
+/**
+ * @returns {void}
+ */
+function openInvites() {
+    inviteEmailsText.value = '';
+    inviteVisible.value = true;
+}
+
+/**
+ * Массовая рассылка внешних приглашений по email.
+ * @returns {Promise<void>}
+ */
+async function sendInvites() {
+    const emails = inviteEmailsText.value
+        .split(/[\n,;]+/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+    if (!emails.length) {
+        ElMessage.warning('Укажите хотя бы один email');
+        return;
+    }
+
+    inviteSending.value = true;
+    try {
+        const { data } = await adminProcedureExtrasApi.sendExternalInvites(id.value, { emails });
+        ElMessage.success(data.message || `Приглашения поставлены в очередь (${emails.length})`);
+        inviteVisible.value = false;
+    } catch (e) {
+        ElMessage.error(e?.response?.data?.message || 'Ошибка рассылки');
+    } finally {
+        inviteSending.value = false;
+    }
+}
+
 onMounted(load);
 watch(id, load);
 </script>
@@ -133,9 +172,17 @@ watch(id, load);
           Лоты
         </el-button>
         <el-button
+          @click="router.push({ name: 'admin.customFields', params: { id: procedure.id } })"
+        >
+          Настраиваемые поля
+        </el-button>
+        <el-button
           @click="router.push({ name: 'admin.changeLogs', params: { id: procedure.id } })"
         >
           Согласование правок
+        </el-button>
+        <el-button v-if="canWrite" @click="openInvites">
+          Внешние приглашения
         </el-button>
         <el-button
           v-if="procedure.type === 'auction'"
@@ -201,8 +248,26 @@ watch(id, load);
         type="info"
         :closable="false"
         show-icon
-        title="КП, лоты, согласование правок и аукцион — кнопки выше."
+        title="КП, лоты, поля, приглашения, согласование и аукцион — кнопки выше."
       />
+
+      <el-dialog v-model="inviteVisible" title="Внешние приглашения" width="520px">
+        <p class="muted">
+          Email через запятую, точку с запятой или с новой строки (до 500 адресов).
+        </p>
+        <el-input
+          v-model="inviteEmailsText"
+          type="textarea"
+          :rows="8"
+          placeholder="user@example.com"
+        />
+        <template #footer>
+          <el-button @click="inviteVisible = false">Отмена</el-button>
+          <el-button type="primary" :loading="inviteSending" @click="sendInvites">
+            Отправить
+          </el-button>
+        </template>
+      </el-dialog>
     </template>
   </div>
 </template>

@@ -61,6 +61,49 @@ const rejectChange = async (procedureId, changeLogId, payload) => {
     return apiClient.post(urls.adminChangeLogReject(procedureId, changeLogId), payload);
 };
 
+const listCustomFields = (procedureId) => apiClient.get(urls.adminCustomFields(procedureId));
+
+/**
+ * @param {number|string} procedureId ID ТЗП
+ * @param {Record<string, unknown>} payload StoreProcedureCustomFieldRequest
+ * @returns {Promise<import('axios').AxiosResponse>}
+ */
+const createCustomField = async (procedureId, payload) => {
+    await fetchCsrfCookie();
+    return apiClient.post(urls.adminCustomFields(procedureId), payload);
+};
+
+/**
+ * @param {number|string} procedureId ID ТЗП
+ * @param {number|string} fieldId ID поля
+ * @param {Record<string, unknown>} payload Поля
+ * @returns {Promise<import('axios').AxiosResponse>}
+ */
+const updateCustomField = async (procedureId, fieldId, payload) => {
+    await fetchCsrfCookie();
+    return apiClient.put(urls.adminCustomField(procedureId, fieldId), payload);
+};
+
+/**
+ * @param {number|string} procedureId ID ТЗП
+ * @param {number|string} fieldId ID поля
+ * @returns {Promise<import('axios').AxiosResponse>}
+ */
+const deleteCustomField = async (procedureId, fieldId) => {
+    await fetchCsrfCookie();
+    return apiClient.delete(urls.adminCustomField(procedureId, fieldId));
+};
+
+/**
+ * @param {number|string} procedureId ID ТЗП
+ * @param {{ emails: string[] }} payload Список email
+ * @returns {Promise<import('axios').AxiosResponse>}
+ */
+const sendExternalInvites = async (procedureId, payload) => {
+    await fetchCsrfCookie();
+    return apiClient.post(urls.adminExternalInvites(procedureId), payload);
+};
+
 export default {
     listLots,
     createLot,
@@ -69,4 +112,9 @@ export default {
     listChangeLogs,
     approveChange,
     rejectChange,
+    listCustomFields,
+    createCustomField,
+    updateCustomField,
+    deleteCustomField,
+    sendExternalInvites,
 };

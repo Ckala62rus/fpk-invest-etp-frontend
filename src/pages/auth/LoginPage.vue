@@ -97,6 +97,9 @@ async function onSubmit() {
       </el-form>
 
       <p class="login-card__footer">
+        <router-link :to="{ name: 'password.forgot' }">Забыли пароль?</router-link>
+      </p>
+      <p class="login-card__footer">
         Нет аккаунта?
         <router-link :to="{ name: 'register' }">Регистрация</router-link>
       </p>

@@ -31,6 +31,24 @@ const routes = [
         meta: { layout: 'public', guestOnly: true, title: 'Регистрация' },
     },
     {
+        path: '/password/forgot',
+        name: 'password.forgot',
+        component: () => import('@/pages/auth/ForgotPasswordPage.vue'),
+        meta: { layout: 'public', guestOnly: true, title: 'Восстановление пароля' },
+    },
+    {
+        path: '/password/reset',
+        name: 'password.reset',
+        component: () => import('@/pages/auth/ResetPasswordPage.vue'),
+        meta: { layout: 'public', title: 'Новый пароль' },
+    },
+    {
+        path: '/password/admin-request',
+        name: 'password.admin-request',
+        component: () => import('@/pages/auth/AdminPasswordRequestPage.vue'),
+        meta: { layout: 'public', guestOnly: true, title: 'Обращение к администратору' },
+    },
+    {
         path: '/procedures',
         name: 'procedures.index',
         component: () => import('@/pages/public/ProceduresIndexPage.vue'),
@@ -306,6 +324,17 @@ const routes = [
             requiresAuth: true,
             roles: [...ADMIN_ROLES],
             title: 'Лоты',
+        },
+    },
+    {
+        path: '/admin/procedures/:id/custom-fields',
+        name: 'admin.customFields',
+        component: () => import('@/pages/admin/AdminCustomFieldsPage.vue'),
+        meta: {
+            layout: 'admin',
+            requiresAuth: true,
+            roles: [...ADMIN_ROLES],
+            title: 'Настраиваемые поля',
         },
     },
     {

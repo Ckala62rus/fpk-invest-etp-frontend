@@ -13,6 +13,9 @@ const router = useRouter();
 const rolesLabel = computed(() => auth.roles.join(', ') || '—');
 const isSuperAdmin = computed(() => auth.hasRole(ROLES.SUPER_ADMIN));
 
+/** URL Laravel Horizon (очереди) — вне SPA, на бэке */
+const horizonUrl = import.meta.env.VITE_HORIZON_URL || 'http://localhost:8200/horizon';
+
 /**
  * Выход из админки.
  * @returns {Promise<void>}
@@ -39,6 +42,14 @@ async function onLogout() {
         <router-link v-if="isSuperAdmin" :to="{ name: 'admin.surveys' }">Опросы</router-link>
         <router-link :to="{ name: 'admin.reports' }">Отчёты</router-link>
         <router-link :to="{ name: 'admin.activity' }">Аудит</router-link>
+        <a
+          v-if="isSuperAdmin"
+          :href="horizonUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Horizon
+        </a>
         <router-link :to="{ name: 'home' }">Витрина</router-link>
         <router-link :to="{ name: 'cabinet' }">Кабинет</router-link>
       </nav>
