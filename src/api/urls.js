@@ -69,7 +69,28 @@ const urls = {
     adminProcedurePublish: (id) => `/admin/procedures/${id}/publish`,
     adminProcedureRestore: (id) => `/admin/procedures/${id}/restore`,
 
+    adminProcedureProposals: (procedureId) => `/admin/procedures/${procedureId}/proposals`,
+    adminProcedureProposal: (procedureId, proposalId) => `/admin/procedures/${procedureId}/proposals/${proposalId}`,
+    adminProposalAdmission: (procedureId, proposalId) => `/admin/procedures/${procedureId}/proposals/${proposalId}/admission-decision`,
+    adminProposalMessages: (procedureId, proposalId) => `/admin/procedures/${procedureId}/proposals/${proposalId}/messages`,
+
+    adminProcedureLots: (procedureId) => `/admin/procedures/${procedureId}/lots`,
+    adminAuctionSettings: (procedureId) => `/admin/procedures/${procedureId}/auction-settings`,
+    adminAuctionStart: (procedureId) => `/admin/procedures/${procedureId}/auction/start`,
+    adminAuctionPause: (procedureId) => `/admin/procedures/${procedureId}/auction/pause`,
+    adminAuctionResume: (procedureId) => `/admin/procedures/${procedureId}/auction/resume`,
+    adminAuctionFinish: (procedureId) => `/admin/procedures/${procedureId}/auction/finish`,
+    adminLotBids: (procedureId, lotId) => `/admin/procedures/${procedureId}/lots/${lotId}/bids`,
+    adminCancelBid: (procedureId, bidId) => `/admin/procedures/${procedureId}/bids/${bidId}/cancel`,
+    adminAuctionPresence: (procedureId) => `/admin/procedures/${procedureId}/auction/presence`,
+    adminAuctionProtocols: (procedureId) => `/admin/procedures/${procedureId}/auction/protocols`,
+
+    adminCmsPages: '/admin/cms-pages',
+    adminCmsPage: (id) => `/admin/cms-pages/${id}`,
+
     adminActivityLogs: '/admin/activity-logs',
+    adminActivityLogsExport: '/admin/activity-logs/export',
+    adminActivityLog: (id) => `/admin/activity-logs/${id}`,
     adminSettings: '/admin/settings',
 };
 

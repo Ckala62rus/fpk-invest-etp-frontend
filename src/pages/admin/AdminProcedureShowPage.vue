@@ -123,10 +123,22 @@ watch(id, load);
           Опубликовать
         </el-button>
         <el-button
+          @click="router.push({ name: 'admin.proposals', params: { id: procedure.id } })"
+        >
+          КП процедуры
+        </el-button>
+        <el-button
+          v-if="procedure.type === 'auction'"
+          type="warning"
+          @click="router.push({ name: 'admin.auction', params: { id: procedure.id } })"
+        >
+          Управление аукционом
+        </el-button>
+        <el-button
           v-if="procedure.type === 'auction'"
           @click="router.push({ name: 'cabinet.auction', params: { id: procedure.id } })"
         >
-          Страница аукциона (участник)
+          Вид участника
         </el-button>
       </el-space>
 
@@ -179,7 +191,7 @@ watch(id, load);
         type="info"
         :closable="false"
         show-icon
-        title="Лоты, КП, аукцион lifecycle, CMS и аудит — следующие итерации F3."
+        title="Лоты и доп. поля процедуры — следующие итерации. КП и аукцион открываются кнопками выше."
       />
     </template>
   </div>

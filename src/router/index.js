@@ -210,6 +210,61 @@ const routes = [
         },
     },
     {
+        path: '/admin/procedures/:id/proposals',
+        name: 'admin.proposals',
+        component: () => import('@/pages/admin/AdminProposalsPage.vue'),
+        meta: {
+            layout: 'admin',
+            requiresAuth: true,
+            roles: [...ADMIN_ROLES],
+            title: 'КП процедуры',
+        },
+    },
+    {
+        path: '/admin/procedures/:id/proposals/:proposalId',
+        name: 'admin.proposals.show',
+        component: () => import('@/pages/admin/AdminProposalShowPage.vue'),
+        meta: {
+            layout: 'admin',
+            requiresAuth: true,
+            roles: [...ADMIN_ROLES],
+            title: 'КП',
+        },
+    },
+    {
+        path: '/admin/procedures/:id/auction',
+        name: 'admin.auction',
+        component: () => import('@/pages/admin/AdminAuctionPage.vue'),
+        meta: {
+            layout: 'admin',
+            requiresAuth: true,
+            roles: [...ADMIN_ROLES],
+            title: 'Аукцион',
+        },
+    },
+    {
+        path: '/admin/cms',
+        name: 'admin.cms',
+        component: () => import('@/pages/admin/AdminCmsPage.vue'),
+        meta: {
+            layout: 'admin',
+            requiresAuth: true,
+            roles: [ROLES.SUPER_ADMIN],
+            title: 'CMS',
+        },
+    },
+    {
+        path: '/admin/activity',
+        name: 'admin.activity',
+        component: () => import('@/pages/admin/AdminActivityPage.vue'),
+        meta: {
+            layout: 'admin',
+            requiresAuth: true,
+            roles: [...ADMIN_ROLES],
+            title: 'Аудит',
+        },
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'not-found',
         component: () => import('@/pages/public/NotFoundPage.vue'),
