@@ -1,0 +1,27 @@
+# Зависимости и сборка
+node_modules/
+dist/
+.DS_Store
+*.local
+.env
+.env.local
+.env.*.local
+
+# Логи и кэш
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.vite/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Справочные материалы (шаблон Metronic и старый пример) — НЕ в git
+/frontend/
+
+# Docker volumes / локальные артефакты
+docker/nginx/logs/
+*.log
