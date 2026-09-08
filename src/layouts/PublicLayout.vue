@@ -1,13 +1,18 @@
 <script setup>
 /**
- * Публичный layout: шапка витрины ЭТП (фаза F0).
+ * Публичный layout: шапка витрины ЭТП для гостей и общих страниц.
+ * Пункты CMS подтягиваются из GET /cms/pages.
  */
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import cmsApi from '@/api/modules/cms';
 
 const auth = useAuthStore();
 const router = useRouter();
+
+/** @type {import('vue').Ref<Array<{ slug: string, title: string }>>} */
+const cmsLinks = ref([]);
 
 const cabinetTarget = computed(() => {
     if (!auth.isAuth) {
@@ -17,6 +22,23 @@ const cabinetTarget = computed(() => {
 });
 
 /**
+ * Загружает список опубликованных страниц CMS для меню.
+ * @returns {Promise<void>}
+ */
+async function loadCmsNav() {
+    try {
+        const { data } = await cmsApi.list();
+        const list = Array.isArray(data.data) ? data.data : [];
+        cmsLinks.value = list
+            .slice()
+            .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+            .map((p) => ({ slug: p.slug, title: p.title }));
+    } catch {
+        cmsLinks.value = [];
+    }
+}
+
+/**
  * Выход и возврат на главную.
  * @returns {Promise<void>}
  */
@@ -24,6 +46,8 @@ async function onLogout() {
     await auth.logout();
     await router.push({ name: 'home' });
 }
+
+onMounted(loadCmsNav);
 </script>
 
 <template>
@@ -34,6 +58,15 @@ async function onLogout() {
       </router-link>
       <nav class="public-layout__nav">
         <router-link :to="{ name: 'home' }">Главная</router-link>
+        <router-link :to="{ name: 'procedures.index' }">Процедуры</router-link>
+        <router-link
+          v-for="page in cmsLinks"
+          :key="page.slug"
+          :to="{ name: 'cms.show', params: { slug: page.slug } }"
+        >
+          {{ page.title }}
+        </router-link>
+        <router-link :to="{ name: 'complaint' }">Жалоба</router-link>
         <router-link v-if="!auth.isAuth" :to="{ name: 'login' }">Вход</router-link>
         <router-link v-if="!auth.isAuth" :to="{ name: 'register' }">Регистрация</router-link>
         <router-link v-if="auth.isAuth" :to="cabinetTarget">Кабинет</router-link>
@@ -44,7 +77,8 @@ async function onLogout() {
       <slot />
     </main>
     <footer class="public-layout__footer">
-      © ЭТП — электронная торговая площадка
+      © ЭТП — электронная торговая площадка ·
+      <router-link :to="{ name: 'corruption' }">Антикоррупция</router-link>
     </footer>
   </div>
 </template>
@@ -69,6 +103,7 @@ async function onLogout() {
 .public-layout__brand {
   color: #fff;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .public-layout__nav {
@@ -95,5 +130,10 @@ async function onLogout() {
   text-align: center;
   color: #6b7280;
   font-size: 0.875rem;
+}
+
+.public-layout__footer a {
+  color: #6b7280;
+  text-decoration: underline;
 }
 </style>

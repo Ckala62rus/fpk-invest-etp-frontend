@@ -3,9 +3,13 @@ import { useAuthStore } from '@/stores/auth';
 import { ADMIN_ROLES, ROLES } from '@/constants/roles';
 
 /**
- * Маршруты SPA ЭТП (фаза F0 — каркас).
+ * Маршруты SPA ЭТП.
  *
- * meta: guestOnly | requiresAuth | roles | layout
+ * meta:
+ * - guestOnly — только для неавторизованных (login/register)
+ * - requiresAuth — нужна сессия Sanctum
+ * - roles — список slug ролей (достаточно одной)
+ * - layout — подсказка layout’у (public | cabinet | admin)
  */
 const routes = [
     {
@@ -25,6 +29,42 @@ const routes = [
         name: 'register',
         component: () => import('@/pages/auth/RegisterPage.vue'),
         meta: { layout: 'public', guestOnly: true, title: 'Регистрация' },
+    },
+    {
+        path: '/procedures',
+        name: 'procedures.index',
+        component: () => import('@/pages/public/ProceduresIndexPage.vue'),
+        meta: { layout: 'public', title: 'Процедуры' },
+    },
+    {
+        path: '/procedures/:id',
+        name: 'procedures.show',
+        component: () => import('@/pages/public/ProcedureShowPage.vue'),
+        meta: { layout: 'public', title: 'Процедура' },
+    },
+    {
+        path: '/pages/:slug',
+        name: 'cms.show',
+        component: () => import('@/pages/public/CmsPage.vue'),
+        meta: { layout: 'public', title: 'Страница' },
+    },
+    {
+        path: '/complaint',
+        name: 'complaint',
+        component: () => import('@/pages/public/ComplaintPage.vue'),
+        meta: { layout: 'public', title: 'Жалоба' },
+    },
+    {
+        path: '/corruption',
+        name: 'corruption',
+        component: () => import('@/pages/public/CorruptionPage.vue'),
+        meta: { layout: 'public', title: 'Антикоррупция' },
+    },
+    {
+        path: '/evaluation/:token',
+        name: 'evaluation',
+        component: () => import('@/pages/public/EvaluationPage.vue'),
+        meta: { layout: 'public', title: 'Опрос качества' },
     },
     {
         path: '/cabinet',
@@ -64,6 +104,9 @@ const router = createRouter({
     },
 });
 
+/**
+ * Navigation guard: сессия + RBAC.
+ */
 router.beforeEach(async (to) => {
     const auth = useAuthStore();
 

@@ -1,88 +1,127 @@
 <script setup>
 /**
- * Главная публичная страница (заглушка F0).
+ * Главная публичная страница: превью открытых ТЗП + быстрые ссылки.
  */
 import { onMounted, ref } from 'vue';
-import systemApi from '@/api/modules/system';
+import { useRouter } from 'vue-router';
+import proceduresApi from '@/api/modules/procedures';
+import { formatDateTime } from '@/helpers/format';
 
-const health = ref(null);
-const healthError = ref('');
+const router = useRouter();
+
+const loading = ref(false);
+const preview = ref([]);
+const loadError = ref('');
 
 /**
- * Запрашивает health у API при монтировании.
+ * Загружает первые процедуры для витрины на главной.
  * @returns {Promise<void>}
  */
-async function loadHealth() {
+async function loadPreview() {
+    loading.value = true;
+    loadError.value = '';
     try {
-        const { data } = await systemApi.health();
-        health.value = data;
+        const { data } = await proceduresApi.list({ per_page: 5, page: 1 });
+        preview.value = Array.isArray(data.data) ? data.data : [];
     } catch (e) {
-        healthError.value = e?.message || 'API недоступен';
+        loadError.value = e?.response?.data?.message || e?.message || 'API недоступен';
+        preview.value = [];
+    } finally {
+        loading.value = false;
     }
 }
 
-onMounted(loadHealth);
+onMounted(loadPreview);
 </script>
 
 <template>
   <div class="etp-page">
     <div class="etp-card">
       <h1>Электронная торговая площадка</h1>
-      <p>
-        Публичная витрина ТЗП (торгово-закупочных процедур) будет на фазе F1.
-        Сейчас — каркас SPA (фаза F0).
+      <p class="lead">
+        Открытые ТЗП (торгово-закупочные процедуры) ФПК «Инвест». Участие — после регистрации и одобрения.
       </p>
 
+      <div class="home-actions">
+        <el-button type="primary" @click="router.push({ name: 'procedures.index' })">
+          Все процедуры
+        </el-button>
+        <el-button @click="router.push({ name: 'login' })">Войти</el-button>
+        <el-button @click="router.push({ name: 'register' })">Регистрация</el-button>
+        <el-button link type="primary" @click="router.push({ name: 'complaint' })">
+          Жалоба
+        </el-button>
+        <el-button link type="warning" @click="router.push({ name: 'corruption' })">
+          Антикоррупция
+        </el-button>
+      </div>
+
+      <h2 class="section-title">Сейчас на площадке</h2>
+
       <el-alert
-        v-if="healthError"
+        v-if="loadError"
         type="error"
-        :title="healthError"
+        :title="loadError"
         show-icon
         :closable="false"
+        class="mb"
       />
 
-      <el-descriptions
-        v-else-if="health"
-        title="Связь с API"
-        :column="1"
-        border
-        class="home-health"
-      >
-        <el-descriptions-item label="success">
-          {{ health.success }}
-        </el-descriptions-item>
-        <el-descriptions-item label="database">
-          {{ health.data?.database }}
-        </el-descriptions-item>
-        <el-descriptions-item label="redis">
-          {{ health.data?.redis }}
-        </el-descriptions-item>
-        <el-descriptions-item label="queue">
-          {{ health.data?.queue }}
-        </el-descriptions-item>
-      </el-descriptions>
+      <el-skeleton v-else-if="loading" :rows="4" animated />
 
-      <div class="home-actions">
-        <el-button type="primary" @click="$router.push({ name: 'login' })">
-          Войти
-        </el-button>
-        <el-button @click="$router.push({ name: 'register' })">
-          Регистрация
-        </el-button>
+      <el-table
+        v-else
+        :data="preview"
+        stripe
+        empty-text="Нет опубликованных процедур"
+        style="width: 100%"
+        @row-click="(row) => router.push({ name: 'procedures.show', params: { id: row.id } })"
+      >
+        <el-table-column prop="number" label="Номер" width="130" />
+        <el-table-column prop="title" label="Название" min-width="200" />
+        <el-table-column label="Тип" width="150">
+          <template #default="{ row }">{{ row.type_label || row.type }}</template>
+        </el-table-column>
+        <el-table-column label="Окончание" width="150">
+          <template #default="{ row }">{{ formatDateTime(row.ends_at) }}</template>
+        </el-table-column>
+      </el-table>
+
+      <div v-if="preview.length" class="more">
+        <router-link :to="{ name: 'procedures.index' }">Смотреть все →</router-link>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.home-health {
-  margin-top: 1rem;
+.lead {
+  color: #4b5563;
+  max-width: 40rem;
 }
 
 .home-actions {
-  margin-top: 1.25rem;
+  margin: 1.25rem 0;
   display: flex;
-  gap: 0.75rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.section-title {
+  font-size: 1.15rem;
+  margin: 1.5rem 0 0.75rem;
+}
+
+.mb {
+  margin-bottom: 1rem;
+}
+
+.more {
+  margin-top: 0.75rem;
+}
+
+:deep(.el-table__row) {
+  cursor: pointer;
 }
 </style>
