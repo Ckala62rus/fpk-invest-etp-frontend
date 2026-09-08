@@ -128,6 +128,16 @@ watch(id, load);
           КП процедуры
         </el-button>
         <el-button
+          @click="router.push({ name: 'admin.lots', params: { id: procedure.id } })"
+        >
+          Лоты
+        </el-button>
+        <el-button
+          @click="router.push({ name: 'admin.changeLogs', params: { id: procedure.id } })"
+        >
+          Согласование правок
+        </el-button>
+        <el-button
           v-if="procedure.type === 'auction'"
           type="warning"
           @click="router.push({ name: 'admin.auction', params: { id: procedure.id } })"
@@ -191,7 +201,7 @@ watch(id, load);
         type="info"
         :closable="false"
         show-icon
-        title="Лоты и доп. поля процедуры — следующие итерации. КП и аукцион открываются кнопками выше."
+        title="КП, лоты, согласование правок и аукцион — кнопки выше."
       />
     </template>
   </div>
