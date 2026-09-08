@@ -78,6 +78,83 @@ const routes = [
         },
     },
     {
+        path: '/cabinet/profile',
+        name: 'cabinet.profile',
+        component: () => import('@/pages/cabinet/ProfilePage.vue'),
+        meta: {
+            layout: 'cabinet',
+            requiresAuth: true,
+            roles: [ROLES.PARTICIPANT, ...ADMIN_ROLES],
+            title: 'Профиль',
+        },
+    },
+    {
+        path: '/cabinet/subscriptions',
+        name: 'cabinet.subscriptions',
+        component: () => import('@/pages/cabinet/SubscriptionsPage.vue'),
+        meta: {
+            layout: 'cabinet',
+            requiresAuth: true,
+            roles: [ROLES.PARTICIPANT, ...ADMIN_ROLES],
+            title: 'Подписки',
+        },
+    },
+    {
+        path: '/cabinet/notifications',
+        name: 'cabinet.notifications',
+        component: () => import('@/pages/cabinet/NotificationSettingsPage.vue'),
+        meta: {
+            layout: 'cabinet',
+            requiresAuth: true,
+            roles: [ROLES.PARTICIPANT, ...ADMIN_ROLES],
+            title: 'Уведомления',
+        },
+    },
+    {
+        path: '/cabinet/proposals',
+        name: 'cabinet.proposals',
+        component: () => import('@/pages/cabinet/ProposalsIndexPage.vue'),
+        meta: {
+            layout: 'cabinet',
+            requiresAuth: true,
+            roles: [ROLES.PARTICIPANT, ...ADMIN_ROLES],
+            title: 'Мои КП',
+        },
+    },
+    {
+        path: '/cabinet/proposals/:id',
+        name: 'cabinet.proposals.show',
+        component: () => import('@/pages/cabinet/ProposalShowPage.vue'),
+        meta: {
+            layout: 'cabinet',
+            requiresAuth: true,
+            roles: [ROLES.PARTICIPANT, ...ADMIN_ROLES],
+            title: 'КП',
+        },
+    },
+    {
+        path: '/cabinet/procedures/:id/propose',
+        name: 'cabinet.propose',
+        component: () => import('@/pages/cabinet/SubmitProposalPage.vue'),
+        meta: {
+            layout: 'cabinet',
+            requiresAuth: true,
+            roles: [ROLES.PARTICIPANT],
+            title: 'Подача КП',
+        },
+    },
+    {
+        path: '/cabinet/procedures/:id/auction',
+        name: 'cabinet.auction',
+        component: () => import('@/pages/cabinet/AuctionPage.vue'),
+        meta: {
+            layout: 'cabinet',
+            requiresAuth: true,
+            roles: [ROLES.PARTICIPANT, ...ADMIN_ROLES],
+            title: 'Аукцион',
+        },
+    },
+    {
         path: '/admin',
         name: 'admin.dashboard',
         component: () => import('@/pages/admin/AdminDashboardPage.vue'),

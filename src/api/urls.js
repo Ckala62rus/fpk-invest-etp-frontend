@@ -46,6 +46,9 @@ const urls = {
     // --- КП (участник) ---
     submitProposal: (procedureId) => `/procedures/${procedureId}/proposals`,
     proposal: (id) => `/proposals/${id}`,
+    proposalDocuments: (proposalId) => `/proposals/${proposalId}/documents`,
+    proposalDocument: (proposalId, documentId) => `/proposals/${proposalId}/documents/${documentId}`,
+    proposalMessages: (proposalId) => `/proposals/${proposalId}/messages`,
 
     // --- Админка (фрагмент; дополняем по мере F3) ---
     adminUsers: '/admin/users',

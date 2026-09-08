@@ -6,9 +6,11 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import proceduresApi from '@/api/modules/procedures';
 import { formatDateTime } from '@/helpers/format';
+import { useAuthStore } from '@/stores/auth';
 
 const route = useRoute();
 const router = useRouter();
+const auth = useAuthStore();
 
 const loading = ref(false);
 const procedure = ref(null);
@@ -93,8 +95,28 @@ watch(procedureId, load);
           type="info"
           show-icon
           :closable="false"
-          title="Подача КП и участие в аукционе — после входа в кабинет участника (фаза F2)."
+          title="Участие после входа в кабинет."
         />
+
+        <div v-if="auth.isAuth" class="actions mt">
+          <el-button
+            v-if="procedure.type === 'request_for_proposal'"
+            type="primary"
+            @click="router.push({ name: 'cabinet.propose', params: { id: procedure.id } })"
+          >
+            Подать КП
+          </el-button>
+          <el-button
+            v-if="procedure.type === 'auction'"
+            type="primary"
+            @click="router.push({ name: 'cabinet.auction', params: { id: procedure.id } })"
+          >
+            Перейти к аукциону
+          </el-button>
+        </div>
+        <p v-else class="mt">
+          <router-link :to="{ name: 'login' }">Войдите</router-link>, чтобы подать КП или участвовать в аукционе.
+        </p>
       </template>
     </div>
   </div>
@@ -107,6 +129,12 @@ watch(procedureId, load);
 
 .mt {
   margin-top: 1rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .description h2 {
