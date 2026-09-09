@@ -73,3 +73,17 @@ a {
   height: 30px;
   padding: 0;
 }
+
+/**
+ * Metronic (plugins.bundle) задаёт .swal2-popup .swal2-icon { margin: 2rem 0 0 0 }
+ * и сбрасывает auto — иконка (? / ! / ✓) прижимается влево. Возвращаем центрирование.
+ */
+.swal2-popup .swal2-icon {
+  margin: 1.25em auto 0.5em !important;
+}
+
+.swal2-popup .swal2-icon .swal2-icon-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

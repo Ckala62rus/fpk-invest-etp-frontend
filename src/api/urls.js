@@ -22,8 +22,11 @@ const urls = {
     // --- Профиль участника ---
     profile: '/profile',
     profileDocuments: '/profile/documents',
+    profileDocumentDownload: (documentId) => `/profile/documents/${documentId}/download`,
     subscriptions: '/subscriptions',
     notificationSettings: '/notification-settings',
+    catalogCategories: '/catalog/categories',
+    catalogCompanyGroups: '/catalog/company-groups',
 
     // --- Публичная витрина ---
     publicProcedures: '/procedures',
@@ -44,10 +47,12 @@ const urls = {
     broadcastingAuth: '/broadcasting/auth',
 
     // --- КП (участник) ---
+    myProposals: '/proposals',
     submitProposal: (procedureId) => `/procedures/${procedureId}/proposals`,
     proposal: (id) => `/proposals/${id}`,
     proposalDocuments: (proposalId) => `/proposals/${proposalId}/documents`,
     proposalDocument: (proposalId, documentId) => `/proposals/${proposalId}/documents/${documentId}`,
+    proposalDocumentDownload: (proposalId, documentId) => `/proposals/${proposalId}/documents/${documentId}/download`,
     proposalMessages: (proposalId) => `/proposals/${proposalId}/messages`,
 
     // --- Админка ---
@@ -56,6 +61,8 @@ const urls = {
     adminUserBlock: (id) => `/admin/users/${id}/block`,
     adminUserUnblock: (id) => `/admin/users/${id}/unblock`,
     adminUserRoles: (id) => `/admin/users/${id}/roles`,
+    adminUserDocuments: (userId) => `/admin/users/${userId}/documents`,
+    adminUserDocumentDownload: (userId, documentId) => `/admin/users/${userId}/documents/${documentId}/download`,
 
     adminCompanyGroups: '/admin/company-groups',
     adminCompanyGroup: (id) => `/admin/company-groups/${id}`,
@@ -71,6 +78,7 @@ const urls = {
 
     adminProcedureProposals: (procedureId) => `/admin/procedures/${procedureId}/proposals`,
     adminProcedureProposal: (procedureId, proposalId) => `/admin/procedures/${procedureId}/proposals/${proposalId}`,
+    adminProposalDocumentDownload: (procedureId, proposalId, documentId) => `/admin/procedures/${procedureId}/proposals/${proposalId}/documents/${documentId}/download`,
     adminProposalAdmission: (procedureId, proposalId) => `/admin/procedures/${procedureId}/proposals/${proposalId}/admission-decision`,
     adminProposalMessages: (procedureId, proposalId) => `/admin/procedures/${procedureId}/proposals/${proposalId}/messages`,
 

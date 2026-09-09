@@ -1,11 +1,11 @@
 <script setup>
 /**
- * Админка: список КП по процедуре + переход к допуску/переписке.
+ * Админка: список КП по процедуре + переход к допуску/переписке и профилю участника.
  */
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
-import { View } from '@element-plus/icons-vue';
+import { User, View } from '@element-plus/icons-vue';
 import adminProposalsApi from '@/api/modules/adminProposals';
 import { formatDateTime } from '@/helpers/format';
 import EtpIconButton from '@/components/ui/EtpIconButton.vue';
@@ -33,6 +33,20 @@ async function load() {
     }
 }
 
+/**
+ * Карточка пользователя + документы организации из профиля.
+ *
+ * @param {Record<string, unknown>} row КП
+ * @returns {void}
+ */
+function openParticipant(row) {
+    if (!row.user_id) {
+        ElMessage.warning('Нет ID участника');
+        return;
+    }
+    router.push({ name: 'admin.users', query: { user_id: String(row.user_id) } });
+}
+
 onMounted(load);
 watch(procedureId, load);
 </script>
@@ -43,7 +57,9 @@ watch(procedureId, load);
       ← К процедуре
     </el-button>
     <h1>КП по процедуре #{{ procedureId }}</h1>
-    <p class="muted">До дедлайна содержимое может быть скрыто (только имя участника).</p>
+    <p class="muted">
+      Кнопка «Профиль» открывает карточку участника и документы организации (устав и т.п.) из его ЛК.
+    </p>
 
     <el-table :data="items" stripe>
       <el-table-column prop="id" label="ID" width="80" />
@@ -61,11 +77,17 @@ watch(procedureId, load);
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="" width="70">
+      <el-table-column label="" width="110">
         <template #default="{ row }">
           <div class="etp-table-actions">
             <EtpIconButton
-              title="Открыть"
+              title="Профиль и документы организации"
+              @click="openParticipant(row)"
+            >
+              <User />
+            </EtpIconButton>
+            <EtpIconButton
+              title="Открыть КП"
               @click="router.push({ name: 'admin.proposals.show', params: { id: procedureId, proposalId: row.id } })"
             >
               <View />

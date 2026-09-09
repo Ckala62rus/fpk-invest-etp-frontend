@@ -5,13 +5,18 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
-import { ROLES } from '@/constants/roles';
+import { ROLES, roleLabel } from '@/constants/roles';
 
 const auth = useAuthStore();
 const router = useRouter();
 
 const isSuperAdmin = computed(() => auth.hasRole(ROLES.SUPER_ADMIN));
-const rolesLabel = computed(() => auth.roles.join(', ') || '—');
+const rolesLabel = computed(() => {
+    if (!auth.roles.length) {
+        return '—';
+    }
+    return auth.roles.map(roleLabel).join(', ');
+});
 const horizonUrl = import.meta.env.VITE_HORIZON_URL || 'http://localhost:8200/horizon';
 const displayName = computed(() => {
     const u = auth.user;

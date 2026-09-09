@@ -83,7 +83,19 @@ function applyServerErrors() {
     }
 }
 
-watch(() => auth.authError, applyServerErrors);
+// Следим только за сменой содержимого: пустой сброс [] не должен показывать тост
+watch(
+    () => auth.authError,
+    (value) => {
+        if (Array.isArray(value) && value.length === 0) {
+            Object.keys(serverErrors).forEach((key) => {
+                delete serverErrors[key];
+            });
+            return;
+        }
+        applyServerErrors();
+    },
+);
 
 /**
  * Собирает payload для POST /auth/register.

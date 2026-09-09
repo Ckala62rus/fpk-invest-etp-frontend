@@ -17,6 +17,12 @@ const submit = async (procedureId, payload) => {
 };
 
 /**
+ * Список своих КП.
+ * @returns {Promise<import('axios').AxiosResponse>}
+ */
+const index = () => apiClient.get(urls.myProposals);
+
+/**
  * Карточка своего КП.
  * @param {number|string} id ID заявки
  * @returns {Promise<import('axios').AxiosResponse>}
@@ -61,11 +67,28 @@ const deleteDocument = async (proposalId, documentId) => {
 };
 
 /**
+ * Скачать / открыть документ КП (blob).
+ * @param {number|string} proposalId ID КП
+ * @param {number|string} documentId ID файла
+ * @param {{ inline?: boolean }} [options] inline — просмотр PDF
+ * @returns {Promise<import('axios').AxiosResponse<Blob>>}
+ */
+const downloadDocument = (proposalId, documentId, options = {}) => apiClient.get(
+    urls.proposalDocumentDownload(proposalId, documentId),
+    {
+        responseType: 'blob',
+        params: options.inline ? { inline: 1 } : undefined,
+        skipGlobalLoader: true,
+    },
+);
+
+/**
  * Переписка по КП.
  * @param {number|string} proposalId ID КП
+ * @param {Record<string, unknown>} [config] Axios config
  * @returns {Promise<import('axios').AxiosResponse>}
  */
-const listMessages = (proposalId) => apiClient.get(urls.proposalMessages(proposalId));
+const listMessages = (proposalId, config = {}) => apiClient.get(urls.proposalMessages(proposalId), config);
 
 /**
  * Отправить сообщение в переписке.
@@ -80,10 +103,12 @@ const sendMessage = async (proposalId, payload) => {
 
 export default {
     submit,
+    index,
     show,
     listDocuments,
     uploadDocument,
     deleteDocument,
+    downloadDocument,
     listMessages,
     sendMessage,
 };

@@ -16,6 +16,30 @@ export const ROLES = Object.freeze({
 });
 
 /**
+ * Русские названия ролей для UI (админка, кабинет).
+ * Ключи — slug API; значения не меняют права, только подписи.
+ */
+export const ROLE_LABELS = Object.freeze({
+    [ROLES.SUPER_ADMIN]: 'Главный администратор',
+    [ROLES.TRADE_ADMIN]: 'Администратор торгов',
+    [ROLES.AUDITOR]: 'Аудитор',
+    [ROLES.PARTICIPANT]: 'Участник',
+});
+
+/**
+ * Русская подпись роли по slug.
+ *
+ * @param {string|null|undefined} roleSlug Slug роли с API
+ * @returns {string}
+ */
+export function roleLabel(roleSlug) {
+    if (!roleSlug) {
+        return '—';
+    }
+    return ROLE_LABELS[roleSlug] || String(roleSlug);
+}
+
+/**
  * Роли, которым разрешена админ-зона (`/admin/*`).
  *
  * @type {readonly string[]}

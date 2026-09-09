@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getCookie } from '@/helpers/cookies';
+import { useUiStore } from '@/stores/ui';
 
 /**
  * Единый HTTP-клиент ЭТП.
@@ -10,6 +11,9 @@ import { getCookie } from '@/helpers/cookies';
  * baseURL:
  * - пустой / относительный `/api` — через Vite proxy на бэк (dev);
  * - абсолютный URL из VITE_API_BASE_URL — прямой вызов API (prod / другой origin).
+ *
+ * Глобальный спиннер: по умолчанию включён для apiClient.
+ * Отключить: `apiClient.get(url, { skipGlobalLoader: true })`.
  */
 
 const env = import.meta.env;
@@ -55,7 +59,43 @@ function attachCsrfHeader(config) {
     return config;
 }
 
-apiClient.interceptors.request.use(attachCsrfHeader);
+/**
+ * Включает глобальный спиннер, если не skipGlobalLoader.
+ *
+ * @param {import('axios').InternalAxiosRequestConfig} config Конфиг
+ * @returns {import('axios').InternalAxiosRequestConfig}
+ */
+function beginGlobalLoader(config) {
+    if (!config.skipGlobalLoader) {
+        try {
+            useUiStore().beginRequest();
+            config.__etpLoaderStarted = true;
+        } catch {
+            // Pinia ещё не готова на самом раннем старте
+        }
+    }
+    return config;
+}
+
+/**
+ * Снимает глобальный спиннер.
+ *
+ * @param {import('axios').AxiosResponse|import('axios').AxiosError} responseOrError Ответ/ошибка
+ * @returns {import('axios').AxiosResponse|Promise<never>}
+ */
+function endGlobalLoader(responseOrError) {
+    const config = responseOrError?.config || responseOrError?.response?.config;
+    if (config?.__etpLoaderStarted) {
+        try {
+            useUiStore().endRequest();
+        } catch {
+            // ignore
+        }
+    }
+    return responseOrError;
+}
+
+apiClient.interceptors.request.use((config) => beginGlobalLoader(attachCsrfHeader(config)));
 rootClient.interceptors.request.use(attachCsrfHeader);
 
 /**
@@ -65,26 +105,27 @@ rootClient.interceptors.request.use(attachCsrfHeader);
  * @returns {Promise<never>}
  */
 function handleResponseError(error) {
+    endGlobalLoader(error);
     const status = error.response?.status;
     const path = window.location.pathname;
 
-    // Гостевые маршруты, где 401 — нормальный ответ (форма входа и т.п.)
     const guestPaths = ['/login', '/register', '/password-forgot', '/password-reset'];
 
     if (status === 401 && !guestPaths.some((p) => path.startsWith(p))) {
-        // Не делаем полный reload здесь — router/guard и Pinia разрулят сессию
-        // Редирект выполняет вызывающий код или navigation guard
+        // router/guard разрулят сессию
     }
 
     return Promise.reject(error);
 }
 
-apiClient.interceptors.response.use((response) => response, handleResponseError);
+apiClient.interceptors.response.use(
+    (response) => endGlobalLoader(response),
+    handleResponseError,
+);
 rootClient.interceptors.response.use((response) => response, handleResponseError);
 
 /**
  * Запрашивает CSRF cookie у Laravel Sanctum.
- * Вызывать перед login / register / любым POST без сессии.
  *
  * @returns {Promise<import('axios').AxiosResponse>}
  */

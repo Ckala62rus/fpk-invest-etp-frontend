@@ -34,7 +34,10 @@ const admission = async (procedureId, proposalId, payload) => {
  * @param {number|string} proposalId ID КП
  * @returns {Promise<import('axios').AxiosResponse>}
  */
-const listMessages = (procedureId, proposalId) => apiClient.get(urls.adminProposalMessages(procedureId, proposalId));
+const listMessages = (procedureId, proposalId, config = {}) => apiClient.get(
+    urls.adminProposalMessages(procedureId, proposalId),
+    config,
+);
 
 /**
  * @param {number|string} procedureId ID ТЗП
@@ -47,10 +50,28 @@ const sendMessage = async (procedureId, proposalId, payload) => {
     return apiClient.post(urls.adminProposalMessages(procedureId, proposalId), payload);
 };
 
+/**
+ * Скачать / открыть документ КП (blob). Доступно после дедлайна приёма.
+ * @param {number|string} procedureId ID ТЗП
+ * @param {number|string} proposalId ID КП
+ * @param {number|string} documentId ID файла
+ * @param {{ inline?: boolean }} [options] inline — просмотр PDF
+ * @returns {Promise<import('axios').AxiosResponse<Blob>>}
+ */
+const downloadDocument = (procedureId, proposalId, documentId, options = {}) => apiClient.get(
+    urls.adminProposalDocumentDownload(procedureId, proposalId, documentId),
+    {
+        responseType: 'blob',
+        params: options.inline ? { inline: 1 } : undefined,
+        skipGlobalLoader: true,
+    },
+);
+
 export default {
     list,
     show,
     admission,
     listMessages,
     sendMessage,
+    downloadDocument,
 };

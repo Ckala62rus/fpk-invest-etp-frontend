@@ -54,10 +54,36 @@ const assignRoles = async (userId, roles) => {
     return apiClient.put(urls.adminUserRoles(userId), { roles });
 };
 
+/**
+ * Список документов профиля пользователя (устав и т.п.).
+ *
+ * @param {number|string} userId ID пользователя
+ * @returns {Promise<import('axios').AxiosResponse>}
+ */
+const listDocuments = (userId) => apiClient.get(urls.adminUserDocuments(userId));
+
+/**
+ * Скачать / открыть документ профиля участника.
+ *
+ * @param {number|string} userId ID пользователя
+ * @param {number|string} documentId ID документа
+ * @param {{ inline?: boolean }} [options] inline=true — PDF в браузере
+ * @returns {Promise<import('axios').AxiosResponse<Blob>>}
+ */
+const downloadDocument = (userId, documentId, options = {}) => apiClient.get(
+    urls.adminUserDocumentDownload(userId, documentId),
+    {
+        responseType: 'blob',
+        params: options.inline ? { inline: 1 } : undefined,
+    },
+);
+
 export default {
     list,
     approve,
     block,
     unblock,
     assignRoles,
+    listDocuments,
+    downloadDocument,
 };

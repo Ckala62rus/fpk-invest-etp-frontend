@@ -65,26 +65,59 @@ export const useAuthStore = defineStore('auth', () => {
 
     /**
      * Нормализует ошибки Laravel `{ message, errors }` в удобный вид для UI.
+     * Пустой `errors: []` игнорируем — берём `message` ( DomainException с 403 ).
      *
      * @param {unknown} error Ошибка axios или произвольная
      * @returns {unknown}
      */
     function extractError(error) {
         const data = error?.response?.data;
-        if (data?.errors) {
-            return data.errors;
+        const errors = data?.errors;
+
+        if (
+            errors
+            && typeof errors === 'object'
+            && !Array.isArray(errors)
+            && Object.keys(errors).length > 0
+        ) {
+            return errors;
         }
+
+        if (Array.isArray(errors) && errors.length > 0) {
+            return errors;
+        }
+
         if (data?.message) {
             return [data.message];
         }
+
         return [error?.message || 'Неизвестная ошибка'];
+    }
+
+    /**
+     * Первое текстовое сообщение из authError (для ElMessage на формах входа).
+     *
+     * @returns {string}
+     */
+    function firstAuthErrorMessage() {
+        const raw = authError.value;
+        if (Array.isArray(raw) && raw.length > 0) {
+            return String(raw[0]);
+        }
+        if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+            const first = Object.values(raw).flat()[0];
+            if (first) {
+                return String(first);
+            }
+        }
+        return 'Не удалось выполнить запрос';
     }
 
     /**
      * Вход по ИНН и паролю, затем загрузка профиля.
      *
      * @param {{ inn: string, password: string }} credentials Учётные данные
-     * @returns {Promise<boolean>} true при успехе
+     * @returns {Promise<{ ok: boolean, message?: string }>} Результат и текст ошибки с API
      */
     async function login(credentials) {
         isSubmitting.value = true;
@@ -92,12 +125,19 @@ export const useAuthStore = defineStore('auth', () => {
         try {
             await authApi.login(credentials);
             await me();
-            return true;
+            return { ok: true };
         } catch (error) {
+            // Сразу из ответа axios — не через пустой errors: []
+            const apiMessage = error?.response?.data?.message;
             authError.value = extractError(error);
             isAuth.value = false;
             user.value = null;
-            return false;
+            return {
+                ok: false,
+                message: (typeof apiMessage === 'string' && apiMessage.trim() !== '')
+                    ? apiMessage
+                    : firstAuthErrorMessage(),
+            };
         } finally {
             isSubmitting.value = false;
         }
@@ -187,5 +227,6 @@ export const useAuthStore = defineStore('auth', () => {
         me,
         logout,
         bootstrap,
+        firstAuthErrorMessage,
     };
 });

@@ -246,7 +246,7 @@ watch(() => pagination.page, load);
           v-if="!companies.length || !categories.length"
           type="warning"
           :closable="false"
-          title="Справочники пусты или недоступны (компании/категории создаёт super_admin)."
+          title="Справочники пусты или недоступны (компании и категории создаёт главный администратор)."
         />
       </el-form>
       <template #footer>

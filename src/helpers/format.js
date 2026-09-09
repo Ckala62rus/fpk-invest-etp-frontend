@@ -38,6 +38,10 @@ export function mapLaravelErrorsToFields(raw) {
     }
 
     if (Array.isArray(raw)) {
+        // Пустой массив — сброс ошибок (authError = []), не «Ошибка запроса»
+        if (raw.length === 0) {
+            return result;
+        }
         result._form = String(raw[0] ?? 'Ошибка запроса');
         return result;
     }

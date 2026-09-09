@@ -39,7 +39,7 @@ async function loadAll() {
         categories.value = Array.isArray(c.data.data) ? c.data.data : [];
         companies.value = Array.isArray(co.data.data) ? co.data.data : [];
     } catch (e) {
-        ElMessage.error(e?.response?.data?.message || 'Нет доступа или ошибка загрузки (нужен super_admin)');
+        ElMessage.error(e?.response?.data?.message || 'Нет доступа или ошибка загрузки (нужен главный администратор)');
     } finally {
         loading.value = false;
     }
@@ -145,7 +145,7 @@ onMounted(loadAll);
 <template>
   <div class="etp-card" v-loading="loading">
     <h1>Классификатор и заказчики</h1>
-    <p class="muted">Доступ: super_admin. Группы → категории → предприятия-заказчики.</p>
+    <p class="muted">Доступ: главный администратор. Группы → категории → предприятия-заказчики.</p>
 
     <h2>Группы компаний</h2>
     <el-form inline @submit.prevent="createGroup">

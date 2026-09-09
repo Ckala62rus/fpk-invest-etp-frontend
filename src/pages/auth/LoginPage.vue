@@ -33,13 +33,16 @@ async function onSubmit() {
         return;
     }
 
-    const ok = await auth.login({
+    const result = await auth.login({
         inn: form.inn.trim(),
         password: form.password,
     });
 
-    if (!ok) {
-        ElMessage.error('Не удалось войти. Проверьте ИНН и пароль.');
+    if (!result.ok) {
+        ElMessage.error(
+            result.message
+            || 'Не удалось войти. Если email подтверждён — дождитесь одобрения администратором.',
+        );
         return;
     }
 

@@ -25,6 +25,11 @@ export default defineConfig(({ mode }) => {
         server: {
             host: '0.0.0.0',
             port,
+            // Windows + Docker: без polling HMR часто не подхватывает правки с хоста
+            watch: {
+                usePolling: true,
+                interval: 1000,
+            },
             // В Docker/на сервере cookie Sanctum идут на тот же origin через proxy
             proxy: {
                 '/api': {

@@ -22,6 +22,18 @@ const updateSubscriptions = async (payload) => {
 };
 
 /**
+ * Справочник категорий для выбора подписок.
+ * @returns {Promise<import('axios').AxiosResponse>}
+ */
+const catalogCategories = () => apiClient.get(urls.catalogCategories);
+
+/**
+ * Справочник групп компаний для выбора подписок.
+ * @returns {Promise<import('axios').AxiosResponse>}
+ */
+const catalogCompanyGroups = () => apiClient.get(urls.catalogCompanyGroups);
+
+/**
  * Настройки email-оповещений.
  * @returns {Promise<import('axios').AxiosResponse>}
  */
@@ -40,6 +52,8 @@ const updateNotificationSettings = async (payload) => {
 export default {
     getSubscriptions,
     updateSubscriptions,
+    catalogCategories,
+    catalogCompanyGroups,
     getNotificationSettings,
     updateNotificationSettings,
 };

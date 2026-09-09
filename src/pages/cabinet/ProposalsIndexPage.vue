@@ -1,54 +1,33 @@
 <script setup>
 /**
- * Список своих КП: ID хранятся локально (на бэке нет index участника).
+ * Список своих КП с API + переход к подаче нового.
  */
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { View } from '@element-plus/icons-vue';
 import proposalsApi from '@/api/modules/proposals';
-import { forgetProposalId, getMyProposalIds } from '@/helpers/myProposals';
 import { formatDateTime } from '@/helpers/format';
 import EtpIconButton from '@/components/ui/EtpIconButton.vue';
 
 const router = useRouter();
 const loading = ref(false);
 const rows = ref([]);
-const manualId = ref(null);
 
 /**
- * Подтягивает карточки по сохранённым ID.
  * @returns {Promise<void>}
  */
 async function load() {
     loading.value = true;
-    const ids = getMyProposalIds();
-    const result = [];
-    for (const id of ids) {
-        try {
-            const { data } = await proposalsApi.show(id);
-            if (data.data) {
-                result.push(data.data);
-            }
-        } catch {
-            forgetProposalId(id);
-        }
+    try {
+        const { data } = await proposalsApi.index();
+        rows.value = Array.isArray(data.data) ? data.data : [];
+    } catch (e) {
+        ElMessage.error(e?.response?.data?.message || 'Не удалось загрузить КП');
+        rows.value = [];
+    } finally {
+        loading.value = false;
     }
-    rows.value = result;
-    loading.value = false;
-}
-
-/**
- * Открыть КП по введённому ID.
- * @returns {void}
- */
-function openManual() {
-    const id = Number(manualId.value);
-    if (!id) {
-        ElMessage.warning('Укажите ID заявки');
-        return;
-    }
-    router.push({ name: 'cabinet.proposals.show', params: { id } });
 }
 
 onMounted(load);
@@ -56,25 +35,35 @@ onMounted(load);
 
 <template>
   <div class="etp-card" v-loading="loading">
-    <h1>Мои КП</h1>
-    <p class="muted">
-      Список строится из локально сохранённых ID после подачи.
-      Можно открыть заявку по номеру, если он известен из письма.
-    </p>
-
-    <div class="manual">
-      <el-input-number v-model="manualId" :min="1" controls-position="right" />
-      <el-button type="primary" @click="openManual">Открыть по ID</el-button>
-      <el-button @click="$router.push({ name: 'procedures.index' })">К процедурам</el-button>
+    <div class="head">
+      <div>
+        <h1>Мои коммерческие предложения</h1>
+        <p class="muted">
+          Здесь все КП, которые вы подали. Чтобы подать новое — откройте процедуру на витрине
+          и нажмите «Подать КП», либо перейдите к списку процедур.
+        </p>
+      </div>
+      <el-button type="primary" @click="router.push({ name: 'procedures.index' })">
+        К процедурам на витрине
+      </el-button>
     </div>
 
-    <el-table :data="rows" stripe empty-text="Пока нет сохранённых КП" style="width: 100%; margin-top: 1rem">
-      <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column prop="procedure_id" label="Процедура" width="110" />
+    <el-table :data="rows" stripe empty-text="Вы ещё не подавали КП" style="width: 100%">
+      <el-table-column label="Процедура" min-width="220">
+        <template #default="{ row }">
+          <div>{{ row.procedure?.number || `№${row.procedure_id}` }}</div>
+          <div class="sub">{{ row.procedure?.title || '—' }}</div>
+        </template>
+      </el-table-column>
+      <el-table-column label="Тип" width="160">
+        <template #default="{ row }">
+          {{ row.procedure?.type_label || row.procedure?.type || '—' }}
+        </template>
+      </el-table-column>
       <el-table-column label="Статус" width="160">
         <template #default="{ row }">{{ row.status_label || row.status }}</template>
       </el-table-column>
-      <el-table-column label="Подано">
+      <el-table-column label="Подано" width="160">
         <template #default="{ row }">{{ formatDateTime(row.submitted_at) }}</template>
       </el-table-column>
       <el-table-column label="" width="70">
@@ -82,7 +71,7 @@ onMounted(load);
           <div class="etp-table-actions">
             <EtpIconButton
               title="Открыть"
-              @click="$router.push({ name: 'cabinet.proposals.show', params: { id: row.id } })"
+              @click="router.push({ name: 'cabinet.proposals.show', params: { id: row.id } })"
             >
               <View />
             </EtpIconButton>
@@ -94,14 +83,22 @@ onMounted(load);
 </template>
 
 <style scoped>
-.muted {
-  color: #6b7280;
+.head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-bottom: 1rem;
 }
 
-.manual {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  align-items: center;
+.muted {
+  color: #6b7280;
+  max-width: 40rem;
+}
+
+.sub {
+  color: #6b7280;
+  font-size: 0.85rem;
 }
 </style>

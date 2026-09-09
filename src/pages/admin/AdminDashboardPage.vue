@@ -3,7 +3,7 @@
  * Дашборд админки: ссылки на разделы F3/F4 и Horizon.
  */
 import { useAuthStore } from '@/stores/auth';
-import { ROLES } from '@/constants/roles';
+import { ROLES, roleLabel } from '@/constants/roles';
 
 const auth = useAuthStore();
 const horizonUrl = import.meta.env.VITE_HORIZON_URL || 'http://localhost:8200/horizon';
@@ -19,7 +19,7 @@ const horizonUrl = import.meta.env.VITE_HORIZON_URL || 'http://localhost:8200/ho
         :key="role"
         style="margin-right: 0.35rem"
       >
-        {{ role }}
+        {{ roleLabel(role) }}
       </el-tag>
     </p>
 

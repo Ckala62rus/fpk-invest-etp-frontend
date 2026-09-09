@@ -20,8 +20,10 @@ Vite проксирует `/api` и `/sanctum` на `VITE_API_PROXY_TARGET`.
 
 Вход super_admin (из сидера бэка): ИНН `770000000000`, пароль `password`.
 
-Пошаговая инструкция (гость → регистрация → админка → аукцион в двух браузерах → MailHog):  
-`documentation/agent-notes/13-portal-user-guide.md` (в корне монорепо `etp`, не в этом git).
+Пошаговая инструкция (гость → КП → аукцион, лоты, поля, приглашения, MailHog):
+
+- в монорепо: `documentation/agent-notes/13-portal-user-guide.md`
+- в backend-репозитории: `docs/portal-user-guide.md`
 
 ## Docker
 

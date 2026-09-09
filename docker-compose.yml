@@ -12,7 +12,8 @@ services:
     environment:
       VITE_API_PROXY_TARGET: ${API_UPSTREAM:-http://host.docker.internal:8200}
       VITE_DEV_PORT: "5173"
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0 --port 5173"
+    # npm install только если нет vite в volume — иначе каждый restart «висит» на install
+    command: sh -c "if [ ! -x node_modules/.bin/vite ]; then npm install --no-audit --no-fund; fi && npm run dev -- --host 0.0.0.0 --port 5173"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     profiles: ["dev"]

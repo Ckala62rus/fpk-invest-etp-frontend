@@ -22,6 +22,12 @@ const update = async (payload) => {
 };
 
 /**
+ * Список документов профиля.
+ * @returns {Promise<import('axios').AxiosResponse>}
+ */
+const listDocuments = () => apiClient.get(urls.profileDocuments);
+
+/**
  * Загрузить документ профиля (multipart).
  * @param {File} file Файл pdf/doc/xls
  * @returns {Promise<import('axios').AxiosResponse>}
@@ -35,8 +41,25 @@ const uploadDocument = async (file) => {
     });
 };
 
+/**
+ * Скачать / открыть свой документ профиля.
+ *
+ * @param {number|string} documentId ID документа
+ * @param {{ inline?: boolean }} [options] inline=true — Content-Disposition: inline
+ * @returns {Promise<import('axios').AxiosResponse<Blob>>}
+ */
+const downloadDocument = (documentId, options = {}) => apiClient.get(
+    urls.profileDocumentDownload(documentId),
+    {
+        responseType: 'blob',
+        params: options.inline ? { inline: 1 } : undefined,
+    },
+);
+
 export default {
     show,
     update,
+    listDocuments,
     uploadDocument,
+    downloadDocument,
 };

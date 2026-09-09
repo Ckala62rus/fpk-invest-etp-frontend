@@ -100,7 +100,7 @@ watch(procedureId, load);
       ← К процедуре
     </el-button>
     <h1>Изменения документации #{{ procedureId }}</h1>
-    <p class="muted">Согласование правок опубликованной ТЗП (роль auditor / super_admin).</p>
+    <p class="muted">Согласование правок опубликованной ТЗП (роли: аудитор, главный администратор).</p>
 
     <el-table :data="items" stripe empty-text="Нет записей">
       <el-table-column prop="id" label="ID" width="70" />

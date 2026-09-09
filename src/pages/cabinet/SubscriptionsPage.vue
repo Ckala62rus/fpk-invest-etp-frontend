@@ -1,7 +1,6 @@
 <script setup>
 /**
- * Подписки участника на категории и группы компаний (рассылки о ТЗП).
- * Справочник категорий — только admin API; здесь управление уже выбранными ID.
+ * Подписки: выбор категорий и групп из справочника (без ручного ID).
  */
 import { onMounted, ref } from 'vue';
 import { ElMessage } from 'element-plus';
@@ -11,29 +10,33 @@ const loading = ref(false);
 const saving = ref(false);
 
 /** @type {import('vue').Ref<Array<{ id: number, name: string }>>} */
-const categories = ref([]);
+const catalogCategories = ref([]);
 /** @type {import('vue').Ref<Array<{ id: number, name: string }>>} */
-const companyGroups = ref([]);
+const catalogGroups = ref([]);
 
 const selectedCategoryIds = ref(/** @type {number[]} */ ([]));
 const selectedGroupIds = ref(/** @type {number[]} */ ([]));
 
-const addCategoryId = ref(null);
-const addGroupId = ref(null);
-
 /**
- * Загружает текущие подписки.
  * @returns {Promise<void>}
  */
 async function load() {
     loading.value = true;
     try {
-        const { data } = await cabinetApi.getSubscriptions();
-        const payload = data.data ?? {};
-        categories.value = Array.isArray(payload.categories) ? payload.categories : [];
-        companyGroups.value = Array.isArray(payload.company_groups) ? payload.company_groups : [];
-        selectedCategoryIds.value = categories.value.map((c) => c.id);
-        selectedGroupIds.value = companyGroups.value.map((g) => g.id);
+        const [subs, cats, groups] = await Promise.all([
+            cabinetApi.getSubscriptions(),
+            cabinetApi.catalogCategories(),
+            cabinetApi.catalogCompanyGroups(),
+        ]);
+
+        catalogCategories.value = Array.isArray(cats.data.data) ? cats.data.data : [];
+        catalogGroups.value = Array.isArray(groups.data.data) ? groups.data.data : [];
+
+        const payload = subs.data.data ?? {};
+        const myCats = Array.isArray(payload.categories) ? payload.categories : [];
+        const myGroups = Array.isArray(payload.company_groups) ? payload.company_groups : [];
+        selectedCategoryIds.value = myCats.map((c) => c.id);
+        selectedGroupIds.value = myGroups.map((g) => g.id);
     } catch (e) {
         ElMessage.error(e?.response?.data?.message || 'Не удалось загрузить подписки');
     } finally {
@@ -42,39 +45,6 @@ async function load() {
 }
 
 /**
- * Добавляет ID категории в выбор (если ещё нет).
- * @returns {void}
- */
-function pushCategory() {
-    const id = Number(addCategoryId.value);
-    if (!id || selectedCategoryIds.value.includes(id)) {
-        return;
-    }
-    selectedCategoryIds.value = [...selectedCategoryIds.value, id];
-    if (!categories.value.some((c) => c.id === id)) {
-        categories.value = [...categories.value, { id, name: `Категория #${id}` }];
-    }
-    addCategoryId.value = null;
-}
-
-/**
- * Добавляет ID группы компаний.
- * @returns {void}
- */
-function pushGroup() {
-    const id = Number(addGroupId.value);
-    if (!id || selectedGroupIds.value.includes(id)) {
-        return;
-    }
-    selectedGroupIds.value = [...selectedGroupIds.value, id];
-    if (!companyGroups.value.some((g) => g.id === id)) {
-        companyGroups.value = [...companyGroups.value, { id, name: `Группа #${id}` }];
-    }
-    addGroupId.value = null;
-}
-
-/**
- * Сохраняет sync подписок.
  * @returns {Promise<void>}
  */
 async function onSave() {
@@ -98,43 +68,52 @@ onMounted(load);
 
 <template>
   <div class="etp-card" v-loading="loading">
-    <h1>Подписки</h1>
+    <h1>Подписки на рассылки</h1>
     <p class="muted">
-      Письма о новых ТЗП (торгово-закупочных процедурах) по выбранным категориям и группам компаний.
-      Полный справочник категорий — в админке; здесь можно снять галочки и добавить ID вручную.
+      Отметьте категории закупок и группы компаний — на почту будут приходить письма о новых
+      ТЗП (торгово-закупочных процедурах) по выбранным направлениям.
+      Справочник заполняет администратор площадки.
     </p>
 
     <h2>Категории</h2>
-    <el-checkbox-group v-model="selectedCategoryIds" class="checks">
+    <el-alert
+      v-if="!catalogCategories.length"
+      type="info"
+      :closable="false"
+      show-icon
+      title="Пока нет доступных категорий. Обратитесь к администратору."
+      class="mb"
+    />
+    <el-checkbox-group v-else v-model="selectedCategoryIds" class="checks">
       <el-checkbox
-        v-for="c in categories"
+        v-for="c in catalogCategories"
         :key="c.id"
         :label="c.id"
         :value="c.id"
       >
-        {{ c.name }} (#{{ c.id }})
+        {{ c.name }}
       </el-checkbox>
     </el-checkbox-group>
-    <div class="add-row">
-      <el-input-number v-model="addCategoryId" :min="1" controls-position="right" />
-      <el-button @click="pushCategory">Добавить категорию по ID</el-button>
-    </div>
 
-    <h2>Группы компаний</h2>
-    <el-checkbox-group v-model="selectedGroupIds" class="checks">
+    <h2>Группы компаний (заказчики)</h2>
+    <el-alert
+      v-if="!catalogGroups.length"
+      type="info"
+      :closable="false"
+      show-icon
+      title="Пока нет доступных групп компаний."
+      class="mb"
+    />
+    <el-checkbox-group v-else v-model="selectedGroupIds" class="checks">
       <el-checkbox
-        v-for="g in companyGroups"
+        v-for="g in catalogGroups"
         :key="g.id"
         :label="g.id"
         :value="g.id"
       >
-        {{ g.name }} (#{{ g.id }})
+        {{ g.name }}
       </el-checkbox>
     </el-checkbox-group>
-    <div class="add-row">
-      <el-input-number v-model="addGroupId" :min="1" controls-position="right" />
-      <el-button @click="pushGroup">Добавить группу по ID</el-button>
-    </div>
 
     <el-button type="primary" class="save" :loading="saving" @click="onSave">
       Сохранить подписки
@@ -159,11 +138,8 @@ h2 {
   margin: 0.5rem 0 0.75rem;
 }
 
-.add-row {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  align-items: center;
+.mb {
+  margin: 0.5rem 0 1rem;
 }
 
 .save {

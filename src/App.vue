@@ -8,6 +8,7 @@ import PublicLayout from '@/layouts/PublicLayout.vue';
 import CabinetLayout from '@/layouts/CabinetLayout.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import AuthLayout from '@/layouts/AuthLayout.vue';
+import GlobalLoader from '@/components/ui/GlobalLoader.vue';
 
 const route = useRoute();
 
@@ -50,4 +51,5 @@ watchEffect(() => {
   <component :is="layoutComponent">
     <router-view />
   </component>
+  <GlobalLoader />
 </template>

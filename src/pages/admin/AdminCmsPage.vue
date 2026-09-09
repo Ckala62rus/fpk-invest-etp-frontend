@@ -35,7 +35,7 @@ async function load() {
         const { data } = await adminCmsApi.list({ per_page: 100 });
         items.value = Array.isArray(data.data) ? data.data : [];
     } catch (e) {
-        ElMessage.error(e?.response?.data?.message || 'Нет доступа (нужен super_admin)');
+        ElMessage.error(e?.response?.data?.message || 'Нет доступа (нужен главный администратор)');
     } finally {
         loading.value = false;
     }

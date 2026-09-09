@@ -1,19 +1,24 @@
 <script setup>
 /**
- * Профиль участника: просмотр/правка анкеты и загрузка документа.
+ * Профиль участника: анкета и список загруженных документов.
  */
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage } from 'element-plus';
+import { Download, View } from '@element-plus/icons-vue';
 import profileApi from '@/api/modules/profile';
 import { ENTITY_TYPES } from '@/constants/procedure';
-import { mapLaravelErrorsToFields } from '@/helpers/format';
+import { mapLaravelErrorsToFields, formatDateTime } from '@/helpers/format';
+import { isPdfFile, openBlobInNewTab, saveBlobAsFile } from '@/helpers/files';
 import { useAuthStore } from '@/stores/auth';
+import { userStatusLabel } from '@/constants/admin';
+import EtpIconButton from '@/components/ui/EtpIconButton.vue';
 
 const auth = useAuthStore();
 const formRef = ref(null);
 const loading = ref(false);
 const saving = ref(false);
 const uploading = ref(false);
+const documents = ref([]);
 const serverErrors = reactive(/** @type {Record<string, string>} */ ({}));
 
 const form = reactive({
@@ -26,7 +31,18 @@ const form = reactive({
 });
 
 /**
- * Загружает профиль с API.
+ * @returns {Promise<void>}
+ */
+async function loadDocuments() {
+    try {
+        const { data } = await profileApi.listDocuments();
+        documents.value = Array.isArray(data.data) ? data.data : [];
+    } catch {
+        documents.value = [];
+    }
+}
+
+/**
  * @returns {Promise<void>}
  */
 async function load() {
@@ -40,6 +56,7 @@ async function load() {
         form.director_name = p.director_name || '';
         form.director_birth_date = p.director_birth_date || '';
         form.contact_persons = p.contact_persons || '';
+        await loadDocuments();
     } catch (e) {
         ElMessage.error(e?.response?.data?.message || 'Не удалось загрузить профиль');
     } finally {
@@ -48,7 +65,6 @@ async function load() {
 }
 
 /**
- * Сохраняет изменения профиля.
  * @returns {Promise<void>}
  */
 async function onSave() {
@@ -74,7 +90,6 @@ async function onSave() {
 }
 
 /**
- * Загрузка файла документа профиля.
  * @param {{ raw: File }} uploadFile Файл из el-upload
  * @returns {Promise<void>}
  */
@@ -84,13 +99,45 @@ async function onUpload({ raw }) {
     }
     uploading.value = true;
     try {
-        await profileApi.uploadDocument(raw);
-        ElMessage.success('Документ загружен');
+        const { data } = await profileApi.uploadDocument(raw);
+        const doc = data.data;
+        if (doc?.id) {
+            documents.value = [doc, ...documents.value.filter((d) => d.id !== doc.id)];
+        } else {
+            await loadDocuments();
+        }
+        ElMessage.success(data.message || 'Документ загружен');
     } catch (e) {
         const fields = mapLaravelErrorsToFields(e?.response?.data?.errors || [e?.response?.data?.message]);
         ElMessage.error(fields.document || fields._form || 'Ошибка загрузки');
     } finally {
         uploading.value = false;
+    }
+}
+
+/**
+ * @param {Record<string, unknown>} row Документ
+ * @returns {Promise<void>}
+ */
+async function onOpenDoc(row) {
+    try {
+        const { data } = await profileApi.downloadDocument(row.id, { inline: true });
+        openBlobInNewTab(data);
+    } catch (e) {
+        ElMessage.error(e?.response?.data?.message || 'Не удалось открыть файл');
+    }
+}
+
+/**
+ * @param {Record<string, unknown>} row Документ
+ * @returns {Promise<void>}
+ */
+async function onDownloadDoc(row) {
+    try {
+        const { data } = await profileApi.downloadDocument(row.id);
+        saveBlobAsFile(data, String(row.file_name || 'document'));
+    } catch (e) {
+        ElMessage.error(e?.response?.data?.message || 'Не удалось скачать файл');
     }
 }
 
@@ -102,7 +149,7 @@ onMounted(load);
     <h1>Профиль</h1>
     <p class="muted">
       ИНН {{ auth.user?.inn }} · {{ auth.user?.email }}
-      · статус {{ auth.user?.status }}
+      · {{ userStatusLabel(auth.user?.status) }}
     </p>
 
     <el-form ref="formRef" :model="form" label-position="top" @submit.prevent="onSave">
@@ -145,7 +192,7 @@ onMounted(load);
     <el-divider />
 
     <h2>Документы</h2>
-    <p class="muted">PDF, DOC, DOCX, XLS, XLSX до 10 МБ. Список загруженных на API пока без GET — только загрузка.</p>
+    <p class="muted">PDF, DOC, DOCX, XLS, XLSX до 10 МБ. После загрузки файл сразу появится в списке ниже.</p>
     <el-upload
       :auto-upload="false"
       :show-file-list="false"
@@ -155,6 +202,30 @@ onMounted(load);
     >
       <el-button :loading="uploading">Выбрать файл</el-button>
     </el-upload>
+
+    <el-table :data="documents" size="small" empty-text="Документов пока нет" class="mt">
+      <el-table-column prop="file_name" label="Файл" min-width="220" />
+      <el-table-column label="Загружен" width="160">
+        <template #default="{ row }">{{ formatDateTime(row.uploaded_at) }}</template>
+      </el-table-column>
+      <el-table-column prop="valid_until" label="Действует до" width="130" />
+      <el-table-column label="Действия" width="120" fixed="right">
+        <template #default="{ row }">
+          <div class="etp-table-actions">
+            <EtpIconButton
+              v-if="isPdfFile(row.file_name)"
+              title="Открыть PDF"
+              @click="onOpenDoc(row)"
+            >
+              <View />
+            </EtpIconButton>
+            <EtpIconButton title="Скачать" @click="onDownloadDoc(row)">
+              <Download />
+            </EtpIconButton>
+          </div>
+        </template>
+      </el-table-column>
+    </el-table>
   </div>
 </template>
 
@@ -166,5 +237,9 @@ onMounted(load);
 
 h2 {
   font-size: 1.1rem;
+}
+
+.mt {
+  margin-top: 1rem;
 }
 </style>
