@@ -58,6 +58,11 @@ async function onLogout() {
               </router-link>
             </div>
             <div class="menu-item">
+              <router-link class="menu-link" :to="{ name: 'cabinet.auctions' }">
+                <span class="menu-title">Мои аукционы</span>
+              </router-link>
+            </div>
+            <div class="menu-item">
               <router-link class="menu-link" :to="{ name: 'home' }">
                 <span class="menu-title">На витрину</span>
               </router-link>

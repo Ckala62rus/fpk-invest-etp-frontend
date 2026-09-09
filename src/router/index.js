@@ -140,6 +140,17 @@ const routes = [
         },
     },
     {
+        path: '/cabinet/auctions',
+        name: 'cabinet.auctions',
+        component: () => import('@/pages/cabinet/MyAuctionsPage.vue'),
+        meta: {
+            layout: 'cabinet',
+            requiresAuth: true,
+            roles: [ROLES.PARTICIPANT, ...ADMIN_ROLES],
+            title: 'Мои аукционы',
+        },
+    },
+    {
         path: '/cabinet/proposals/:id',
         name: 'cabinet.proposals.show',
         component: () => import('@/pages/cabinet/ProposalShowPage.vue'),

@@ -19,6 +19,7 @@ const auth = useAuthStore();
       <el-button @click="$router.push({ name: 'cabinet.subscriptions' })">Подписки</el-button>
       <el-button @click="$router.push({ name: 'cabinet.notifications' })">Уведомления</el-button>
       <el-button @click="$router.push({ name: 'cabinet.proposals' })">Мои КП</el-button>
+      <el-button @click="$router.push({ name: 'cabinet.auctions' })">Мои аукционы</el-button>
       <el-button @click="$router.push({ name: 'procedures.index' })">К процедурам</el-button>
     </el-space>
   </div>

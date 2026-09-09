@@ -40,6 +40,7 @@ const urls = {
     evaluationSurvey: (token) => `/evaluation-surveys/${token}`,
 
     // --- Аукцион (участник) ---
+    myAuctions: '/me/auctions',
     procedureLots: (procedureId) => `/procedures/${procedureId}/lots`,
     lotBids: (procedureId, lotId) => `/procedures/${procedureId}/lots/${lotId}/bids`,
     auctionHeartbeat: (procedureId) => `/procedures/${procedureId}/auction/presence/heartbeat`,
