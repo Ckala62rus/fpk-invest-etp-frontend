@@ -10,6 +10,7 @@ import adminProcedureExtrasApi from '@/api/modules/adminProcedureExtras';
 import { ROLES } from '@/constants/roles';
 import { useAuthStore } from '@/stores/auth';
 import { formatDateTime } from '@/helpers/format';
+import { auctionTradeBadge } from '@/helpers/auctionTrade';
 
 const auth = useAuthStore();
 const route = useRoute();
@@ -20,6 +21,11 @@ const canWrite = computed(() => auth.hasRole([ROLES.SUPER_ADMIN, ROLES.TRADE_ADM
 const loading = ref(false);
 const saving = ref(false);
 const procedure = ref(null);
+/** Лоты и тикер — только для type=auction (не для запроса КП). */
+const isAuction = computed(() => procedure.value?.type === 'auction');
+const tradeBadge = computed(() =>
+    auctionTradeBadge(procedure.value?.auction_trade_status),
+);
 const inviteVisible = ref(false);
 const inviteEmailsText = ref('');
 const inviteSending = ref(false);
@@ -152,6 +158,14 @@ watch(id, load);
         · {{ procedure.status_label || procedure.status }}
         · создана {{ formatDateTime(procedure.created_at) }}
       </p>
+      <p v-if="isAuction" class="trade-status">
+        <el-tag :type="tradeBadge.tagType" effect="dark">
+          {{ procedure.auction_trade_status_label || tradeBadge.label }}
+        </el-tag>
+        <span v-if="procedure.auction_is_paused" class="muted">
+          Ставки временно не принимаются
+        </span>
+      </p>
 
       <el-space wrap class="mb">
         <el-button
@@ -162,15 +176,26 @@ watch(id, load);
           Опубликовать
         </el-button>
         <el-button
+          v-if="!isAuction"
           @click="router.push({ name: 'admin.proposals', params: { id: procedure.id } })"
         >
           КП процедуры
         </el-button>
         <el-button
+          v-if="isAuction"
           @click="router.push({ name: 'admin.lots', params: { id: procedure.id } })"
         >
           Лоты
         </el-button>
+        <el-tooltip
+          v-else
+          content="Лоты только для аукциона. У запроса КП (коммерческих предложений) лоты не используются."
+          placement="top"
+        >
+          <span class="btn-disabled-wrap">
+            <el-button disabled>Лоты</el-button>
+          </span>
+        </el-tooltip>
         <el-button
           @click="router.push({ name: 'admin.customFields', params: { id: procedure.id } })"
         >
@@ -190,14 +215,14 @@ watch(id, load);
           Внешние приглашения
         </el-button>
         <el-button
-          v-if="procedure.type === 'auction'"
+          v-if="isAuction"
           type="warning"
           @click="router.push({ name: 'admin.auction', params: { id: procedure.id } })"
         >
-          Управление аукционом
+          Управление аукционом / ставки
         </el-button>
         <el-button
-          v-if="procedure.type === 'auction'"
+          v-if="isAuction"
           @click="router.push({ name: 'cabinet.auction', params: { id: procedure.id } })"
         >
           Вид участника
@@ -253,7 +278,7 @@ watch(id, load);
         type="info"
         :closable="false"
         show-icon
-        title="КП, лоты, поля, приглашения, согласование и аукцион — кнопки выше."
+        title="КП — для запроса предложений. Лоты и аукцион — только если тип ТЗП «Электронный аукцион»."
       />
 
       <el-dialog v-model="inviteVisible" title="Внешние приглашения" width="520px">
@@ -282,8 +307,21 @@ watch(id, load);
   color: #6b7280;
 }
 
+.trade-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.5rem 0 1rem;
+}
+
 .mb,
 .mt {
   margin: 1rem 0;
+}
+
+/* Обёртка нужна, чтобы tooltip работал на disabled-кнопке */
+.btn-disabled-wrap {
+  display: inline-block;
 }
 </style>

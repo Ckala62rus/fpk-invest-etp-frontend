@@ -1,11 +1,12 @@
 <script setup>
 /**
- * CRUD лотов ТЗП в админке.
+ * CRUD лотов аукционной ТЗП в админке (для запроса КП не используется).
  */
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Delete, Edit } from '@element-plus/icons-vue';
+import adminProceduresApi from '@/api/modules/adminProcedures';
 import adminProcedureExtrasApi from '@/api/modules/adminProcedureExtras';
 import { ROLES } from '@/constants/roles';
 import { useAuthStore } from '@/stores/auth';
@@ -19,6 +20,8 @@ const canWrite = computed(() => auth.hasRole([ROLES.SUPER_ADMIN, ROLES.TRADE_ADM
 
 const loading = ref(false);
 const items = ref([]);
+const procedureType = ref(/** @type {string|null} */ (null));
+const isAuction = computed(() => procedureType.value === 'auction');
 const dialogVisible = ref(false);
 const editingId = ref(null);
 const saving = ref(false);
@@ -38,6 +41,17 @@ const form = reactive({
 async function load() {
     loading.value = true;
     try {
+        const proc = await adminProceduresApi.show(procedureId.value);
+        procedureType.value = proc.data.data?.type ?? null;
+
+        if (procedureType.value !== 'auction') {
+            ElMessage.warning(
+                'Лоты доступны только для аукциона. У запроса КП (коммерческих предложений) лоты не используются.',
+            );
+            items.value = [];
+            return;
+        }
+
         const { data } = await adminProcedureExtrasApi.listLots(procedureId.value);
         items.value = Array.isArray(data.data) ? data.data : [];
     } catch (e) {
@@ -51,6 +65,10 @@ async function load() {
  * @returns {void}
  */
 function openCreate() {
+    if (!isAuction.value) {
+        ElMessage.warning('Лоты только для аукциона');
+        return;
+    }
     editingId.value = null;
     Object.assign(form, {
         name: '',
@@ -86,17 +104,25 @@ function openEdit(row) {
 async function onSave() {
     saving.value = true;
     try {
-        const payload = { ...form };
+        const payload = {
+            name: form.name.trim(),
+            unit: form.unit || null,
+            quantity: form.quantity,
+            start_price: form.start_price,
+            bid_step: form.bid_step,
+            sort_order: form.sort_order,
+        };
         if (editingId.value) {
             await adminProcedureExtrasApi.updateLot(procedureId.value, editingId.value, payload);
+            ElMessage.success('Лот обновлён');
         } else {
             await adminProcedureExtrasApi.createLot(procedureId.value, payload);
+            ElMessage.success('Лот создан');
         }
         dialogVisible.value = false;
-        ElMessage.success('Сохранено');
         await load();
     } catch (e) {
-        ElMessage.error(e?.response?.data?.message || 'Ошибка');
+        ElMessage.error(e?.response?.data?.message || 'Ошибка сохранения');
     } finally {
         saving.value = false;
     }
@@ -107,8 +133,8 @@ async function onSave() {
  * @returns {Promise<void>}
  */
 async function onDelete(id) {
-    await ElMessageBox.confirm('Удалить лот?', 'Подтверждение');
     try {
+        await ElMessageBox.confirm('Удалить лот?', 'Подтверждение');
         await adminProcedureExtrasApi.deleteLot(procedureId.value, id);
         ElMessage.success('Удалено');
         await load();
@@ -130,10 +156,19 @@ watch(procedureId, load);
     </el-button>
     <div class="head">
       <h1>Лоты процедуры #{{ procedureId }}</h1>
-      <el-button v-if="canWrite" type="primary" @click="openCreate">Добавить лот</el-button>
+      <el-button v-if="canWrite && isAuction" type="primary" @click="openCreate">Добавить лот</el-button>
     </div>
 
-    <el-table :data="items" stripe>
+    <el-alert
+      v-if="procedureType && !isAuction"
+      type="warning"
+      :closable="false"
+      show-icon
+      class="mb"
+      title="Это запрос КП (коммерческих предложений). Лоты нужны только для аукциона — вернитесь к карточке процедуры."
+    />
+
+    <el-table v-else :data="items" stripe>
       <el-table-column prop="sort_order" label="#" width="60" />
       <el-table-column prop="name" label="Название" min-width="180" />
       <el-table-column prop="unit" label="Ед." width="80" />
@@ -155,25 +190,41 @@ watch(procedureId, load);
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="dialogVisible" :title="editingId ? 'Лот' : 'Новый лот'" width="520px">
+    <el-dialog v-model="dialogVisible" :title="editingId ? 'Лот' : 'Новый лот'" width="560px">
+      <p class="dialog-intro">
+        Лот — отдельный предмет торгов внутри аукциона. У каждого лота своя цена и свои ставки.
+      </p>
       <el-form label-position="top">
         <el-form-item label="Название" required>
-          <el-input v-model="form.name" />
+          <el-input v-model="form.name" placeholder="Например: Отделка кабинета №3" />
+          <div class="field-hint">Как лот видят участники в списке торгов.</div>
         </el-form-item>
         <el-form-item label="Ед. изм.">
-          <el-input v-model="form.unit" />
+          <el-input v-model="form.unit" placeholder="м², шт., комплект…" />
+          <div class="field-hint">Единица измерения объёма (необязательно).</div>
         </el-form-item>
         <el-form-item label="Количество">
           <el-input-number v-model="form.quantity" :min="0" />
+          <div class="field-hint">Объём закупки в указанных единицах (необязательно).</div>
         </el-form-item>
         <el-form-item label="Начальная цена" required>
           <el-input-number v-model="form.start_price" :min="0" :step="1000" />
+          <div class="field-hint">
+            Стартовая цена лота на момент начала торгов. От неё идут ставки
+            (вверх или вниз — зависит от режима аукциона в «Управление аукционом»).
+          </div>
         </el-form-item>
         <el-form-item label="Шаг ставки" required>
           <el-input-number v-model="form.bid_step" :min="0.01" :step="100" />
+          <div class="field-hint">
+            Минимальная разница между новой ставкой и текущей ценой лота.
+            Пример: текущая цена 100&nbsp;000, шаг 5&nbsp;000 — следующая ставка должна
+            отличаться минимум на 5&nbsp;000 (нельзя «перебить» на 100 рублей).
+          </div>
         </el-form-item>
         <el-form-item label="Порядок">
           <el-input-number v-model="form.sort_order" :min="0" />
+          <div class="field-hint">Порядок отображения лотов в списке (0, 1, 2…).</div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -191,5 +242,24 @@ watch(procedureId, load);
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+.mb {
+  margin: 1rem 0;
+}
+
+.dialog-intro {
+  margin: 0 0 1rem;
+  color: #6b7280;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.field-hint {
+  margin-top: 0.35rem;
+  color: #6b7280;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  width: 100%;
 }
 </style>
