@@ -94,6 +94,8 @@ const urls = {
     adminCancelBid: (procedureId, bidId) => `/admin/procedures/${procedureId}/bids/${bidId}/cancel`,
     adminAuctionPresence: (procedureId) => `/admin/procedures/${procedureId}/auction/presence`,
     adminAuctionProtocols: (procedureId) => `/admin/procedures/${procedureId}/auction/protocols`,
+    adminAuctionProtocolDownload: (procedureId, protocolId) =>
+        `/admin/procedures/${procedureId}/auction/protocols/${protocolId}/download`,
 
     adminChangeLogs: (procedureId) => `/admin/procedures/${procedureId}/change-logs`,
     adminChangeLogApprove: (procedureId, changeLogId) => `/admin/procedures/${procedureId}/change-logs/${changeLogId}/approve`,

@@ -11,6 +11,7 @@ import { ROLES } from '@/constants/roles';
 import { useAuthStore } from '@/stores/auth';
 import { auctionTradeBadge } from '@/helpers/auctionTrade';
 import { formatDateTime } from '@/helpers/format';
+import { openBlobInNewTab, saveBlobAsFile } from '@/helpers/files';
 
 const auth = useAuthStore();
 const route = useRoute();
@@ -267,6 +268,65 @@ async function onProtocol() {
     }
 }
 
+/**
+ * Скачать PDF-протокол.
+ *
+ * @param {{ id: number }} row Строка протокола
+ * @returns {Promise<void>}
+ */
+async function onDownloadProtocol(row) {
+    try {
+        const { data } = await adminAuctionApi.downloadProtocol(procedureId.value, row.id);
+        if (data instanceof Blob && data.type && data.type.includes('json')) {
+            const text = await data.text();
+            const parsed = JSON.parse(text);
+            throw new Error(parsed.message || 'Не удалось скачать протокол');
+        }
+        saveBlobAsFile(data, `protocol-${procedureId.value}-${row.id}.pdf`);
+        ElMessage.success('Файл скачан');
+    } catch (e) {
+        let msg = e?.message || e?.response?.data?.message || 'Не удалось скачать протокол';
+        if (e?.response?.data instanceof Blob) {
+            try {
+                const text = await e.response.data.text();
+                msg = JSON.parse(text)?.message || msg;
+            } catch {
+                // ignore
+            }
+        }
+        ElMessage.error(msg);
+    }
+}
+
+/**
+ * Открыть PDF в новой вкладке.
+ *
+ * @param {{ id: number }} row Строка протокола
+ * @returns {Promise<void>}
+ */
+async function onOpenProtocol(row) {
+    try {
+        const { data } = await adminAuctionApi.downloadProtocol(procedureId.value, row.id);
+        if (data instanceof Blob && data.type && data.type.includes('json')) {
+            const text = await data.text();
+            const parsed = JSON.parse(text);
+            throw new Error(parsed.message || 'Не удалось открыть протокол');
+        }
+        openBlobInNewTab(data);
+    } catch (e) {
+        let msg = e?.message || e?.response?.data?.message || 'Не удалось открыть протокол';
+        if (e?.response?.data instanceof Blob) {
+            try {
+                const text = await e.response.data.text();
+                msg = JSON.parse(text)?.message || msg;
+            } catch {
+                // ignore
+            }
+        }
+        ElMessage.error(msg);
+    }
+}
+
 onMounted(load);
 watch(procedureId, load);
 watch(selectedLotId, loadBids);
@@ -517,11 +577,24 @@ watch(selectedLotId, loadBids);
     <pre class="json mb">{{ JSON.stringify(presenceData, null, 2) }}</pre>
 
     <h2>Протоколы</h2>
+    <p class="field-hint mb">
+      PDF формируется при финише и по кнопке «Сгенерировать». Скачайте нужную версию ниже.
+    </p>
     <el-table :data="protocols" size="small" empty-text="Нет протоколов">
       <el-table-column prop="id" label="ID" width="70" />
-      <el-table-column prop="status" label="Статус" width="120" />
-      <el-table-column label="Создан" width="160">
-        <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
+      <el-table-column label="Сформирован" width="170">
+        <template #default="{ row }">{{ formatDateTime(row.generated_at) }}</template>
+      </el-table-column>
+      <el-table-column label="Кем" width="120">
+        <template #default="{ row }">
+          {{ row.generated_by ? `user #${row.generated_by}` : 'авто' }}
+        </template>
+      </el-table-column>
+      <el-table-column label="" width="200" fixed="right">
+        <template #default="{ row }">
+          <el-button link type="primary" @click="onOpenProtocol(row)">Открыть</el-button>
+          <el-button link type="primary" @click="onDownloadProtocol(row)">Скачать</el-button>
+        </template>
       </el-table-column>
     </el-table>
 

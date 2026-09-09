@@ -61,6 +61,18 @@ const generateProtocol = async (procedureId) => {
     return apiClient.post(urls.adminAuctionProtocols(procedureId));
 };
 
+/**
+ * Скачать PDF-протокол (blob).
+ *
+ * @param {number|string} procedureId ID ТЗП
+ * @param {number|string} protocolId ID протокола
+ * @returns {Promise<import('axios').AxiosResponse>}
+ */
+const downloadProtocol = (procedureId, protocolId) =>
+    apiClient.get(urls.adminAuctionProtocolDownload(procedureId, protocolId), {
+        responseType: 'blob',
+    });
+
 export default {
     getSettings,
     updateSettings,
@@ -71,4 +83,5 @@ export default {
     presence,
     listProtocols,
     generateProtocol,
+    downloadProtocol,
 };
