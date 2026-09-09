@@ -4,8 +4,10 @@
  */
 import { onMounted, reactive, ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
+import { View } from '@element-plus/icons-vue';
 import adminActivityApi from '@/api/modules/adminActivity';
 import { formatDateTime } from '@/helpers/format';
+import EtpIconButton from '@/components/ui/EtpIconButton.vue';
 
 const loading = ref(false);
 const items = ref([]);
@@ -140,9 +142,13 @@ watch(() => pagination.page, load);
       <el-table-column label="Когда" width="150">
         <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
       </el-table-column>
-      <el-table-column label="" width="100">
+      <el-table-column label="" width="70">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openDetail(row.id)">Детали</el-button>
+          <div class="etp-table-actions">
+            <EtpIconButton title="Детали" @click="openDetail(row.id)">
+              <View />
+            </EtpIconButton>
+          </div>
         </template>
       </el-table-column>
     </el-table>

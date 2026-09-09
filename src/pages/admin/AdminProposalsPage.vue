@@ -5,8 +5,10 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import { View } from '@element-plus/icons-vue';
 import adminProposalsApi from '@/api/modules/adminProposals';
 import { formatDateTime } from '@/helpers/format';
+import EtpIconButton from '@/components/ui/EtpIconButton.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -59,15 +61,16 @@ watch(procedureId, load);
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="" width="120">
+      <el-table-column label="" width="70">
         <template #default="{ row }">
-          <el-button
-            link
-            type="primary"
-            @click="router.push({ name: 'admin.proposals.show', params: { id: procedureId, proposalId: row.id } })"
-          >
-            Открыть
-          </el-button>
+          <div class="etp-table-actions">
+            <EtpIconButton
+              title="Открыть"
+              @click="router.push({ name: 'admin.proposals.show', params: { id: procedureId, proposalId: row.id } })"
+            >
+              <View />
+            </EtpIconButton>
+          </div>
         </template>
       </el-table-column>
     </el-table>

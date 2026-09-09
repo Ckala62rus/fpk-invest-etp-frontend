@@ -4,7 +4,9 @@
  */
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { Delete } from '@element-plus/icons-vue';
 import adminClassifierApi from '@/api/modules/adminClassifier';
+import EtpIconButton from '@/components/ui/EtpIconButton.vue';
 
 const loading = ref(false);
 const groups = ref([]);
@@ -155,9 +157,13 @@ onMounted(loadAll);
     <el-table :data="groups" size="small" class="mb">
       <el-table-column prop="id" label="ID" width="70" />
       <el-table-column prop="name" label="Название" />
-      <el-table-column label="" width="100">
+      <el-table-column label="" width="70">
         <template #default="{ row }">
-          <el-button link type="danger" @click="removeGroup(row.id)">Удалить</el-button>
+          <div class="etp-table-actions">
+            <EtpIconButton type="danger" title="Удалить" @click="removeGroup(row.id)">
+              <Delete />
+            </EtpIconButton>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -178,9 +184,13 @@ onMounted(loadAll);
       <el-table-column prop="id" label="ID" width="70" />
       <el-table-column prop="company_group_id" label="Группа" width="90" />
       <el-table-column prop="name" label="Название" />
-      <el-table-column label="" width="100">
+      <el-table-column label="" width="70">
         <template #default="{ row }">
-          <el-button link type="danger" @click="removeCategory(row.id)">Удалить</el-button>
+          <div class="etp-table-actions">
+            <EtpIconButton type="danger" title="Удалить" @click="removeCategory(row.id)">
+              <Delete />
+            </EtpIconButton>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -204,9 +214,13 @@ onMounted(loadAll);
       <el-table-column prop="id" label="ID" width="70" />
       <el-table-column prop="name" label="Название" />
       <el-table-column prop="inn" label="ИНН" width="130" />
-      <el-table-column label="" width="100">
+      <el-table-column label="" width="70">
         <template #default="{ row }">
-          <el-button link type="danger" @click="removeCompany(row.id)">Удалить</el-button>
+          <div class="etp-table-actions">
+            <EtpIconButton type="danger" title="Удалить" @click="removeCompany(row.id)">
+              <Delete />
+            </EtpIconButton>
+          </div>
         </template>
       </el-table-column>
     </el-table>

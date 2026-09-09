@@ -5,10 +5,12 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import { CircleCheck, CircleClose } from '@element-plus/icons-vue';
 import adminProcedureExtrasApi from '@/api/modules/adminProcedureExtras';
 import { ROLES } from '@/constants/roles';
 import { useAuthStore } from '@/stores/auth';
 import { formatDateTime } from '@/helpers/format';
+import EtpIconButton from '@/components/ui/EtpIconButton.vue';
 
 const auth = useAuthStore();
 const route = useRoute();
@@ -109,14 +111,21 @@ watch(procedureId, load);
       <el-table-column label="Создано" width="150">
         <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
       </el-table-column>
-      <el-table-column v-if="canApprove" label="" width="200">
+      <el-table-column v-if="canApprove" label="" width="110" fixed="right">
         <template #default="{ row }">
-          <template v-if="row.approval_status === 'pending'">
-            <el-button link type="success" :loading="acting" @click="onApprove(row.id)">
-              Согласовать
-            </el-button>
-            <el-button link type="danger" @click="openReject(row.id)">Отклонить</el-button>
-          </template>
+          <div v-if="row.approval_status === 'pending'" class="etp-table-actions">
+            <EtpIconButton
+              type="success"
+              title="Согласовать"
+              :disabled="acting"
+              @click="onApprove(row.id)"
+            >
+              <CircleCheck />
+            </EtpIconButton>
+            <EtpIconButton type="danger" title="Отклонить" @click="openReject(row.id)">
+              <CircleClose />
+            </EtpIconButton>
+          </div>
         </template>
       </el-table-column>
     </el-table>

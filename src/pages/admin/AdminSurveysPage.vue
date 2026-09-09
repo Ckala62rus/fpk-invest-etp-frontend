@@ -4,7 +4,9 @@
  */
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { Delete, Edit } from '@element-plus/icons-vue';
 import adminSurveysApi from '@/api/modules/adminSurveys';
+import EtpIconButton from '@/components/ui/EtpIconButton.vue';
 
 const loading = ref(false);
 const items = ref([]);
@@ -115,8 +117,14 @@ onMounted(load);
       </el-table-column>
       <el-table-column label="" width="160">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openEdit(row)">Изменить</el-button>
-          <el-button link type="danger" @click="onDelete(row.id)">Удалить</el-button>
+          <div class="etp-table-actions">
+            <EtpIconButton title="Изменить" @click="openEdit(row)">
+              <Edit />
+            </EtpIconButton>
+            <EtpIconButton type="danger" title="Удалить" @click="onDelete(row.id)">
+              <Delete />
+            </EtpIconButton>
+          </div>
         </template>
       </el-table-column>
     </el-table>

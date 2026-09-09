@@ -4,7 +4,9 @@
  */
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { CircleClose, Delete, Edit } from '@element-plus/icons-vue';
 import adminExtraConditionsApi from '@/api/modules/adminExtraConditions';
+import EtpIconButton from '@/components/ui/EtpIconButton.vue';
 
 const TYPE_OPTIONS = [
     { value: 'text', label: 'Текст' },
@@ -130,8 +132,14 @@ onMounted(load);
       </el-table-column>
       <el-table-column label="" width="160">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openEdit(row)">Изменить</el-button>
-          <el-button link type="danger" @click="onDelete(row.id)">Выкл.</el-button>
+          <div class="etp-table-actions">
+            <EtpIconButton title="Изменить" @click="openEdit(row)">
+              <Edit />
+            </EtpIconButton>
+            <EtpIconButton type="danger" title="Деактивировать" @click="onDelete(row.id)">
+              <CircleClose />
+            </EtpIconButton>
+          </div>
         </template>
       </el-table-column>
     </el-table>

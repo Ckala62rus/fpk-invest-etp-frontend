@@ -4,10 +4,12 @@
  */
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
+import { CircleCheck, Lock, Setting, Unlock } from '@element-plus/icons-vue';
 import adminUsersApi from '@/api/modules/adminUsers';
 import { ASSIGNABLE_ROLES, USER_STATUSES } from '@/constants/admin';
 import { ROLES } from '@/constants/roles';
 import { useAuthStore } from '@/stores/auth';
+import EtpIconButton from '@/components/ui/EtpIconButton.vue';
 
 const auth = useAuthStore();
 const loading = ref(false);
@@ -178,37 +180,41 @@ watch(() => pagination.page, load);
           <el-tag v-for="r in (row.roles || [])" :key="r" size="small" class="tag">{{ r }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="Действия" width="280" fixed="right">
+      <el-table-column label="Действия" width="150" fixed="right">
         <template #default="{ row }">
-          <template v-if="canModerate">
-            <el-button
-              v-if="row.status === 'pending_approval'"
-              link
+          <div class="etp-table-actions">
+            <EtpIconButton
+              v-if="canModerate && row.status === 'pending_approval'"
               type="success"
+              title="Одобрить"
               @click="onApprove(row.id)"
             >
-              Одобрить
-            </el-button>
-            <el-button
-              v-if="row.status !== 'blocked'"
-              link
+              <CircleCheck />
+            </EtpIconButton>
+            <EtpIconButton
+              v-if="canModerate && row.status !== 'blocked'"
               type="danger"
+              title="Заблокировать"
               @click="openBlock(row)"
             >
-              Блок
-            </el-button>
-            <el-button
-              v-else
-              link
+              <Lock />
+            </EtpIconButton>
+            <EtpIconButton
+              v-if="canModerate && row.status === 'blocked'"
               type="warning"
+              title="Разблокировать"
               @click="onUnblock(row.id)"
             >
-              Разблок
-            </el-button>
-          </template>
-          <el-button v-if="canAssignRoles" link type="primary" @click="openRoles(row)">
-            Роли
-          </el-button>
+              <Unlock />
+            </EtpIconButton>
+            <EtpIconButton
+              v-if="canAssignRoles"
+              title="Роли"
+              @click="openRoles(row)"
+            >
+              <Setting />
+            </EtpIconButton>
+          </div>
         </template>
       </el-table-column>
     </el-table>

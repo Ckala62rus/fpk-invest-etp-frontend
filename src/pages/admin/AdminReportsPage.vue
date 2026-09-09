@@ -4,10 +4,12 @@
  */
 import { computed, onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { Delete, Edit } from '@element-plus/icons-vue';
 import adminReportsApi from '@/api/modules/adminReports';
 import { ROLES } from '@/constants/roles';
 import { useAuthStore } from '@/stores/auth';
 import { formatDateTime } from '@/helpers/format';
+import EtpIconButton from '@/components/ui/EtpIconButton.vue';
 
 const auth = useAuthStore();
 const isSuper = computed(() => auth.hasRole(ROLES.SUPER_ADMIN));
@@ -199,8 +201,14 @@ onMounted(load);
       </el-table-column>
       <el-table-column v-if="isSuper" label="" width="160">
         <template #default="{ row }">
-          <el-button link type="primary" @click.stop="openEdit(row)">Изменить</el-button>
-          <el-button link type="danger" @click.stop="onDelete(row.id)">Удалить</el-button>
+          <div class="etp-table-actions">
+            <EtpIconButton title="Изменить" @click.stop="openEdit(row)">
+              <Edit />
+            </EtpIconButton>
+            <EtpIconButton type="danger" title="Удалить" @click.stop="onDelete(row.id)">
+              <Delete />
+            </EtpIconButton>
+          </div>
         </template>
       </el-table-column>
     </el-table>

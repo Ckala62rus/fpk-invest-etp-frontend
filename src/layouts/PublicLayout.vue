@@ -1,10 +1,11 @@
 <script setup>
 /**
- * Публичный layout по reference example: Header + Navbar + Footer
- * (не Metronic — Metronic только админка/кабинет/auth).
+ * Публичный layout по reference example: Header + Navbar + Footer.
+ * Классы etp-* — чтобы Metronic/Bootstrap не ломали горизонтальное меню.
  */
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { SwitchButton } from '@element-plus/icons-vue';
 import { useAuthStore } from '@/stores/auth';
 import cmsApi from '@/api/modules/cms';
 
@@ -58,7 +59,7 @@ onMounted(loadCmsNav);
 <template>
   <div class="public-shell">
     <header class="header-wrapper">
-      <div class="container">
+      <div class="etp-container">
         <div class="header-row">
           <router-link :to="{ name: 'home' }" class="logo-section">
             <div class="logo-placeholder">
@@ -71,7 +72,7 @@ onMounted(loadCmsNav);
           </router-link>
 
           <div class="user-info">
-            <p class="mb-1">
+            <p class="user-greet">
               Здравствуйте,
               <span class="user-name">{{ displayName }}</span>
             </p>
@@ -89,7 +90,10 @@ onMounted(loadCmsNav);
                   Панель администратора
                 </router-link>
                 <router-link :to="cabinetTarget" class="btn-admin">Кабинет</router-link>
-                <button type="button" class="btn-logout" title="Выход" @click="onLogout">✕</button>
+                <button type="button" class="btn-logout" @click="onLogout">
+                  <el-icon :size="16"><SwitchButton /></el-icon>
+                  <span>Выход</span>
+                </button>
               </template>
             </div>
           </div>
@@ -97,56 +101,56 @@ onMounted(loadCmsNav);
       </div>
     </header>
 
-    <nav class="main-nav">
-      <div class="container nav-inner">
+    <nav class="etp-main-nav">
+      <div class="etp-container etp-nav-inner">
         <button
           type="button"
-          class="nav-toggler"
+          class="etp-nav-toggler"
           aria-label="Меню"
           @click="mobileOpen = !mobileOpen"
         >
           ☰
         </button>
-        <ul class="navbar-nav" :class="{ open: mobileOpen }">
-          <li>
+        <ul class="etp-nav-list" :class="{ 'is-open': mobileOpen }">
+          <li class="etp-nav-item">
             <router-link
-              class="nav-link"
+              class="etp-nav-link"
               :to="{ name: 'home' }"
               @click="mobileOpen = false"
             >
               Главная
             </router-link>
           </li>
-          <li>
+          <li class="etp-nav-item">
             <router-link
-              class="nav-link"
+              class="etp-nav-link"
               :to="{ name: 'procedures.index' }"
               @click="mobileOpen = false"
             >
               Процедуры
             </router-link>
           </li>
-          <li v-for="page in cmsLinks" :key="page.slug">
+          <li v-for="page in cmsLinks" :key="page.slug" class="etp-nav-item">
             <router-link
-              class="nav-link"
+              class="etp-nav-link"
               :to="{ name: 'cms.show', params: { slug: page.slug } }"
               @click="mobileOpen = false"
             >
               {{ page.title }}
             </router-link>
           </li>
-          <li>
+          <li class="etp-nav-item">
             <router-link
-              class="nav-link"
+              class="etp-nav-link"
               :to="{ name: 'complaint' }"
               @click="mobileOpen = false"
             >
               Жалоба
             </router-link>
           </li>
-          <li>
+          <li class="etp-nav-item">
             <router-link
-              class="nav-link"
+              class="etp-nav-link"
               :to="{ name: 'corruption' }"
               @click="mobileOpen = false"
             >
@@ -158,13 +162,13 @@ onMounted(loadCmsNav);
     </nav>
 
     <main class="main-content">
-      <div class="container">
+      <div class="etp-container">
         <slot />
       </div>
     </main>
 
     <footer class="footer-wrapper">
-      <div class="container footer-content">
+      <div class="etp-container footer-content">
         <p class="footer-text">ЭТП ФПК «Инвест» © {{ new Date().getFullYear() }}</p>
         <div class="footer-links">
           <router-link :to="{ name: 'cms.show', params: { slug: 'about' } }">О площадке</router-link>
@@ -185,15 +189,16 @@ onMounted(loadCmsNav);
   color: var(--text-dark, #1a1a1a);
 }
 
-.container {
+.etp-container {
   width: 100%;
   max-width: 1140px;
   margin: 0 auto;
   padding: 0 16px;
+  box-sizing: border-box;
 }
 
 .header-wrapper {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   padding: 16px 0;
@@ -253,6 +258,10 @@ onMounted(loadCmsNav);
   font-size: 0.875rem;
 }
 
+.user-greet {
+  margin: 0;
+}
+
 .user-name {
   font-weight: 600;
   color: #1a1a1a;
@@ -284,34 +293,42 @@ onMounted(loadCmsNav);
 }
 
 .btn-logout {
-  width: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   height: 32px;
+  padding: 0 12px;
   border-radius: 6px;
-  color: #6b7280;
-  background: transparent;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #7c2d36;
+  background: #fff;
+  border: 1px solid rgba(124, 45, 54, 0.25);
   cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .btn-logout:hover {
   background: #fee2e2;
+  border-color: #fecaca;
   color: #dc2626;
 }
 
-.main-nav {
-  background: rgba(255, 255, 255, 0.9);
+/* Горизонтальное меню — свои классы, без .navbar-nav Metronic */
+.etp-main-nav {
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-.nav-inner {
+.etp-nav-inner {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 8px;
   min-height: 52px;
 }
 
-.nav-toggler {
+.etp-nav-toggler {
   display: none;
   border: 1px solid rgba(0, 0, 0, 0.08);
   background: #fff;
@@ -320,28 +337,39 @@ onMounted(loadCmsNav);
   cursor: pointer;
 }
 
-.navbar-nav {
-  display: flex;
+.etp-nav-list {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap;
   align-items: center;
   gap: 4px;
   list-style: none;
   margin: 0;
   padding: 0;
-  flex-wrap: wrap;
+  width: 100%;
 }
 
-.nav-link {
+.etp-nav-item {
   display: block;
-  color: #4a4a4a !important;
+  margin: 0;
+  padding: 0;
+}
+
+.etp-nav-link {
+  display: inline-flex;
+  align-items: center;
+  color: #4a4a4a;
   font-weight: 500;
   font-size: 0.875rem;
-  padding: 12px 16px !important;
+  padding: 10px 14px;
   border-radius: 8px;
+  white-space: nowrap;
+  line-height: 1.2;
 }
 
-.nav-link:hover,
-.nav-link.router-link-active {
-  color: #7c2d36 !important;
+.etp-nav-link:hover,
+.etp-nav-link.router-link-active {
+  color: #7c2d36;
   background: rgba(124, 45, 54, 0.08);
 }
 
@@ -351,7 +379,7 @@ onMounted(loadCmsNav);
 }
 
 .footer-wrapper {
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   padding: 20px 0;
   border-top: 1px solid rgba(0, 0, 0, 0.06);
@@ -402,20 +430,23 @@ onMounted(loadCmsNav);
     justify-content: flex-start;
   }
 
-  .nav-toggler {
+  .etp-nav-toggler {
     display: inline-flex;
   }
 
-  .navbar-nav {
-    display: none;
-    width: 100%;
-    flex-direction: column;
+  .etp-nav-list {
+    display: none !important;
+    flex-direction: column !important;
     align-items: stretch;
     padding: 8px 0 12px;
   }
 
-  .navbar-nav.open {
-    display: flex;
+  .etp-nav-list.is-open {
+    display: flex !important;
+  }
+
+  .etp-nav-link {
+    width: 100%;
   }
 }
 </style>

@@ -59,3 +59,17 @@ a {
 .menu-title {
   font-size: 0.95rem;
 }
+
+/* Группа иконок-действий в таблицах (Metronic-like) */
+.etp-table-actions {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.etp-table-actions .el-button.is-circle {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+}

@@ -5,12 +5,14 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { Delete, Edit, Upload, View } from '@element-plus/icons-vue';
 import adminProceduresApi from '@/api/modules/adminProcedures';
 import adminClassifierApi from '@/api/modules/adminClassifier';
 import { PROCEDURE_TYPES } from '@/constants/procedure';
 import { ROLES } from '@/constants/roles';
 import { useAuthStore } from '@/stores/auth';
 import { formatDateTime } from '@/helpers/format';
+import EtpIconButton from '@/components/ui/EtpIconButton.vue';
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -177,20 +179,32 @@ watch(() => pagination.page, load);
       <el-table-column label="Окончание" width="150">
         <template #default="{ row }">{{ formatDateTime(row.ends_at) }}</template>
       </el-table-column>
-      <el-table-column label="" width="260" fixed="right">
+      <el-table-column label="" width="140" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="$router.push({ name: 'admin.procedures.show', params: { id: row.id } })">
-            Открыть
-          </el-button>
-          <el-button
-            v-if="canWrite && row.status === 'draft'"
-            link
-            type="success"
-            @click="onPublish(row.id)"
-          >
-            Опубликовать
-          </el-button>
-          <el-button v-if="canDelete" link type="danger" @click="onDelete(row.id)">Удалить</el-button>
+          <div class="etp-table-actions">
+            <EtpIconButton
+              title="Открыть"
+              @click="$router.push({ name: 'admin.procedures.show', params: { id: row.id } })"
+            >
+              <View />
+            </EtpIconButton>
+            <EtpIconButton
+              v-if="canWrite && row.status === 'draft'"
+              type="success"
+              title="Опубликовать"
+              @click="onPublish(row.id)"
+            >
+              <Upload />
+            </EtpIconButton>
+            <EtpIconButton
+              v-if="canDelete"
+              type="danger"
+              title="Удалить"
+              @click="onDelete(row.id)"
+            >
+              <Delete />
+            </EtpIconButton>
+          </div>
         </template>
       </el-table-column>
     </el-table>

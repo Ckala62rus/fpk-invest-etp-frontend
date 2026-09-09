@@ -5,9 +5,11 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { Delete, Edit } from '@element-plus/icons-vue';
 import adminProcedureExtrasApi from '@/api/modules/adminProcedureExtras';
 import { ROLES } from '@/constants/roles';
 import { useAuthStore } from '@/stores/auth';
+import EtpIconButton from '@/components/ui/EtpIconButton.vue';
 
 const auth = useAuthStore();
 const route = useRoute();
@@ -209,10 +211,16 @@ watch(procedureId, load);
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column v-if="canWrite" label="" width="160" fixed="right">
+      <el-table-column v-if="canWrite" label="" width="110" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openEdit(row)">Изменить</el-button>
-          <el-button link type="danger" @click="onDelete(row.id)">Удалить</el-button>
+          <div class="etp-table-actions">
+            <EtpIconButton title="Изменить" @click="openEdit(row)">
+              <Edit />
+            </EtpIconButton>
+            <EtpIconButton type="danger" title="Удалить" @click="onDelete(row.id)">
+              <Delete />
+            </EtpIconButton>
+          </div>
         </template>
       </el-table-column>
     </el-table>

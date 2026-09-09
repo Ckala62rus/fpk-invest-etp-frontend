@@ -5,9 +5,11 @@
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import { View } from '@element-plus/icons-vue';
 import proposalsApi from '@/api/modules/proposals';
 import { forgetProposalId, getMyProposalIds } from '@/helpers/myProposals';
 import { formatDateTime } from '@/helpers/format';
+import EtpIconButton from '@/components/ui/EtpIconButton.vue';
 
 const router = useRouter();
 const loading = ref(false);
@@ -75,11 +77,16 @@ onMounted(load);
       <el-table-column label="Подано">
         <template #default="{ row }">{{ formatDateTime(row.submitted_at) }}</template>
       </el-table-column>
-      <el-table-column label="" width="120">
+      <el-table-column label="" width="70">
         <template #default="{ row }">
-          <el-button link type="primary" @click="$router.push({ name: 'cabinet.proposals.show', params: { id: row.id } })">
-            Открыть
-          </el-button>
+          <div class="etp-table-actions">
+            <EtpIconButton
+              title="Открыть"
+              @click="$router.push({ name: 'cabinet.proposals.show', params: { id: row.id } })"
+            >
+              <View />
+            </EtpIconButton>
+          </div>
         </template>
       </el-table-column>
     </el-table>

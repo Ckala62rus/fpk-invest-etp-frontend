@@ -5,7 +5,9 @@
 import { onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { Delete, Edit, View } from '@element-plus/icons-vue';
 import adminCmsApi from '@/api/modules/adminCms';
+import EtpIconButton from '@/components/ui/EtpIconButton.vue';
 
 const router = useRouter();
 const loading = ref(false);
@@ -135,16 +137,19 @@ onMounted(load);
         </template>
       </el-table-column>
       <el-table-column prop="sort_order" label="Порядок" width="90" />
-      <el-table-column label="" width="200">
+      <el-table-column label="" width="140" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="openEdit(row)">Изменить</el-button>
-          <el-button
-            link
-            @click="router.push({ name: 'cms.show', params: { slug: row.slug } })"
-          >
-            Витрина
-          </el-button>
-          <el-button link type="danger" @click="onDelete(row.id)">Удалить</el-button>
+          <div class="etp-table-actions">
+            <EtpIconButton title="Изменить" @click="openEdit(row)">
+              <Edit />
+            </EtpIconButton>
+            <EtpIconButton title="Открыть на витрине" @click="router.push({ name: 'cms.show', params: { slug: row.slug } })">
+              <View />
+            </EtpIconButton>
+            <EtpIconButton type="danger" title="Удалить" @click="onDelete(row.id)">
+              <Delete />
+            </EtpIconButton>
+          </div>
         </template>
       </el-table-column>
     </el-table>

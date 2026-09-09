@@ -5,9 +5,11 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import { Delete } from '@element-plus/icons-vue';
 import proposalsApi from '@/api/modules/proposals';
 import { rememberProposalId } from '@/helpers/myProposals';
 import { formatDateTime } from '@/helpers/format';
+import EtpIconButton from '@/components/ui/EtpIconButton.vue';
 
 const route = useRoute();
 const proposalId = computed(() => route.params.id);
@@ -129,9 +131,13 @@ watch(proposalId, load);
       <el-table :data="documents" size="small" empty-text="Нет файлов" class="mt">
         <el-table-column prop="file_name" label="Файл" />
         <el-table-column prop="type" label="Тип" width="120" />
-        <el-table-column label="" width="100">
+        <el-table-column label="" width="70">
           <template #default="{ row }">
-            <el-button link type="danger" @click="onDeleteDoc(row.id)">Удалить</el-button>
+            <div class="etp-table-actions">
+              <EtpIconButton type="danger" title="Удалить" @click="onDeleteDoc(row.id)">
+                <Delete />
+              </EtpIconButton>
+            </div>
           </template>
         </el-table-column>
       </el-table>
