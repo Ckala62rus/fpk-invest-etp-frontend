@@ -29,8 +29,14 @@ const urls = {
     catalogCompanyGroups: '/catalog/company-groups',
 
     // --- Публичная витрина ---
+    branding: '/site-logo',
+    brandingLogo: '/site-logo/file',
+    siteLogo: '/site-logo',
+    siteLogoFile: '/site-logo/file',
     publicProcedures: '/procedures',
     publicProcedure: (id) => `/procedures/${id}`,
+    publicProcedureDocumentDownload: (procedureId, documentId) =>
+        `/procedures/${procedureId}/documents/${documentId}/download`,
     cmsPages: '/cms/pages',
     cmsPage: (slug) => `/cms/pages/${slug}`,
     complaints: '/complaints',
@@ -58,6 +64,8 @@ const urls = {
 
     // --- Админка ---
     adminUsers: '/admin/users',
+    adminUser: (id) => `/admin/users/${id}`,
+    adminUserAdminNotes: (id) => `/admin/users/${id}/admin-notes`,
     adminUserApprove: (id) => `/admin/users/${id}/approve`,
     adminUserBlock: (id) => `/admin/users/${id}/block`,
     adminUserUnblock: (id) => `/admin/users/${id}/unblock`,
@@ -76,11 +84,15 @@ const urls = {
     adminProcedure: (id) => `/admin/procedures/${id}`,
     adminProcedurePublish: (id) => `/admin/procedures/${id}/publish`,
     adminProcedureRestore: (id) => `/admin/procedures/${id}/restore`,
+    adminProcedureDocuments: (procedureId) => `/admin/procedures/${procedureId}/documents`,
+    adminProcedureDocumentDownload: (procedureId, documentId) =>
+        `/admin/procedures/${procedureId}/documents/${documentId}/download`,
+    adminProcedureDocument: (procedureId, documentId) =>
+        `/admin/procedures/${procedureId}/documents/${documentId}`,
 
     adminProcedureProposals: (procedureId) => `/admin/procedures/${procedureId}/proposals`,
     adminProcedureProposal: (procedureId, proposalId) => `/admin/procedures/${procedureId}/proposals/${proposalId}`,
     adminProposalDocumentDownload: (procedureId, proposalId, documentId) => `/admin/procedures/${procedureId}/proposals/${proposalId}/documents/${documentId}/download`,
-    adminProposalAdmission: (procedureId, proposalId) => `/admin/procedures/${procedureId}/proposals/${proposalId}/admission-decision`,
     adminProposalMessages: (procedureId, proposalId) => `/admin/procedures/${procedureId}/proposals/${proposalId}/messages`,
 
     adminProcedureLots: (procedureId) => `/admin/procedures/${procedureId}/lots`,
@@ -126,6 +138,7 @@ const urls = {
     adminActivityLogsExport: '/admin/activity-logs/export',
     adminActivityLog: (id) => `/admin/activity-logs/${id}`,
     adminSettings: '/admin/settings',
+    adminSettingsLogo: '/admin/settings/logo',
 };
 
 export default urls;

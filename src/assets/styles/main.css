@@ -4,15 +4,21 @@
  * - админка/кабинет/auth: Metronic + Element Plus.
  */
 :root {
-  --el-color-primary: #009ef7;
-  --primary-color: #7c2d36;
-  --primary-light: #9a3a45;
-  --primary-dark: #5a1f27;
-  --text-dark: #1a1a1a;
-  --text-medium: #4a4a4a;
-  --text-muted: #6b7280;
-  --public-bg: #f8f6f4;
-  --border-color: rgba(0, 0, 0, 0.06);
+  --el-color-primary: #3b9dd9;
+  /* Небесно-голубой корпоративный стиль публичной части */
+  --primary-color: #3b9dd9;
+  --primary-light: #5eb3e8;
+  --primary-dark: #2a7fb3;
+  --sky-50: #f0f8ff;
+  --sky-100: #e3f2fd;
+  --sky-200: #bbdefb;
+  --sky-500: #42a5f5;
+  --sky-700: #1976d2;
+  --text-dark: #1a2332;
+  --text-medium: #3d4f63;
+  --text-muted: #6b7c8f;
+  --public-bg: linear-gradient(180deg, #e8f4fc 0%, #f5fafd 40%, #ffffff 100%);
+  --border-color: rgba(59, 157, 217, 0.15);
 }
 
 html,

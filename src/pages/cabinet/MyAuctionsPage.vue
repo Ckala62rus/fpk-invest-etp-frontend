@@ -42,7 +42,7 @@ onMounted(load);
           победили ли вы (чужие победители не показываются).
         </p>
       </div>
-      <el-button type="primary" @click="router.push({ name: 'procedures.index' })">
+      <el-button type="primary" @click="router.push({ name: 'home' })">
         К процедурам на витрине
       </el-button>
     </div>

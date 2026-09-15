@@ -11,7 +11,7 @@ import adminUsersApi from '@/api/modules/adminUsers';
 import { ASSIGNABLE_ROLES, USER_STATUSES, userStatusLabel } from '@/constants/admin';
 import { ROLES, roleLabel } from '@/constants/roles';
 import { ENTITY_TYPES } from '@/constants/procedure';
-import { formatDateTime } from '@/helpers/format';
+import { apiErrorMessage, formatDateTime } from '@/helpers/format';
 import { isPdfFile, openBlobInNewTab, saveBlobAsFile } from '@/helpers/files';
 import { useAuthStore } from '@/stores/auth';
 import EtpIconButton from '@/components/ui/EtpIconButton.vue';
@@ -26,6 +26,7 @@ const pagination = reactive({ page: 1, perPage: 20, total: 0 });
 
 const canModerate = computed(() => auth.hasRole([ROLES.SUPER_ADMIN, ROLES.TRADE_ADMIN]));
 const canAssignRoles = computed(() => auth.hasRole(ROLES.SUPER_ADMIN));
+const canEditNotes = computed(() => auth.hasRole([ROLES.SUPER_ADMIN, ROLES.TRADE_ADMIN]));
 
 const blockVisible = ref(false);
 const blockUserId = ref(null);
@@ -43,6 +44,8 @@ const approving = ref(false);
 /** Документы профиля (устав и т.п.) в карточке пользователя */
 const detailDocuments = ref(/** @type {Array<Record<string, unknown>>} */ ([]));
 const detailDocsLoading = ref(false);
+const notesDraft = ref('');
+const savingNotes = ref(false);
 
 /**
  * Подпись типа субъекта (юрлицо / физлицо).
@@ -124,12 +127,45 @@ async function loadDetailDocuments(userId) {
  * @param {'view'|'approve'} mode Режим (просмотр или одобрение)
  * @returns {void}
  */
-function openDetail(row, mode = 'view') {
+async function openDetail(row, mode = 'view') {
     detailUser.value = row;
     detailMode.value = mode;
     detailVisible.value = true;
+    notesDraft.value = typeof row?.admin_notes === 'string' ? row.admin_notes : '';
     if (row?.id) {
         loadDetailDocuments(row.id);
+        if (row.inn === '…' || !row.email) {
+            try {
+                const { data } = await adminUsersApi.show(row.id);
+                detailUser.value = data.data ?? row;
+                notesDraft.value = detailUser.value?.admin_notes || '';
+            } catch (e) {
+                ElMessage.error(apiErrorMessage(e, 'Не удалось загрузить карточку'));
+            }
+        }
+    }
+}
+
+/**
+ * Сохраняет служебный комментарий администратора.
+ *
+ * @returns {Promise<void>}
+ */
+async function saveAdminNotes() {
+    const id = detailUser.value?.id;
+    if (!id || !canEditNotes.value) {
+        return;
+    }
+    savingNotes.value = true;
+    try {
+        const { data } = await adminUsersApi.updateAdminNotes(id, notesDraft.value || null);
+        detailUser.value = data.data ?? detailUser.value;
+        notesDraft.value = detailUser.value?.admin_notes || '';
+        ElMessage.success('Комментарий сохранён');
+    } catch (e) {
+        ElMessage.error(apiErrorMessage(e, 'Не удалось сохранить комментарий'));
+    } finally {
+        savingNotes.value = false;
     }
 }
 
@@ -446,6 +482,27 @@ watch(() => pagination.page, load);
           </el-descriptions-item>
         </el-descriptions>
 
+        <h3 class="docs-title">Служебный комментарий</h3>
+        <p class="docs-hint">Виден только администраторам. Участник это поле не видит.</p>
+        <el-input
+          v-model="notesDraft"
+          type="textarea"
+          :rows="4"
+          maxlength="5000"
+          show-word-limit
+          :disabled="!canEditNotes"
+          placeholder="Заметки о пользователе…"
+        />
+        <el-button
+          v-if="canEditNotes"
+          type="primary"
+          class="notes-save"
+          :loading="savingNotes"
+          @click="saveAdminNotes"
+        >
+          Сохранить комментарий
+        </el-button>
+
         <h3 class="docs-title">Документы организации (профиль)</h3>
         <p class="docs-hint">Файлы, которые участник загрузил в личном кабинете (устав, реквизиты и т.п.).</p>
         <el-table
@@ -573,5 +630,9 @@ watch(() => pagination.page, load);
   margin: 0 0 0.75rem;
   color: #6b7280;
   font-size: 0.875rem;
+}
+
+.notes-save {
+  margin-top: 0.75rem;
 }
 </style>

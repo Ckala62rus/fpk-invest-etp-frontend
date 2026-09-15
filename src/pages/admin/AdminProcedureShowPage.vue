@@ -5,12 +5,18 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { Delete, Download, View } from '@element-plus/icons-vue';
 import adminProceduresApi from '@/api/modules/adminProcedures';
+import adminProcedureDocumentsApi from '@/api/modules/adminProcedureDocuments';
 import adminProcedureExtrasApi from '@/api/modules/adminProcedureExtras';
+import { DOCUMENT_ACCEPT, DOCUMENT_FORMATS_HINT } from '@/constants/documents';
 import { ROLES } from '@/constants/roles';
 import { useAuthStore } from '@/stores/auth';
-import { formatDateTime } from '@/helpers/format';
+import { apiErrorMessage, formatDateTime, toNaiveDateTimeMoscow } from '@/helpers/format';
 import { auctionTradeBadge } from '@/helpers/auctionTrade';
+import { confirmAction } from '@/helpers/confirm';
+import { isPdfFile, openBlobInNewTab, saveBlobAsFile } from '@/helpers/files';
+import EtpIconButton from '@/components/ui/EtpIconButton.vue';
 
 const auth = useAuthStore();
 const route = useRoute();
@@ -30,6 +36,10 @@ const inviteVisible = ref(false);
 const inviteEmailsText = ref('');
 const inviteSending = ref(false);
 
+const procedureDocuments = ref(/** @type {Array<Record<string, unknown>>} */ ([]));
+const docsLoading = ref(false);
+const docUploading = ref(false);
+
 const form = reactive({
     title: '',
     description: '',
@@ -38,6 +48,22 @@ const form = reactive({
     starts_at: '',
     ends_at: '',
 });
+
+/**
+ * @returns {Promise<void>}
+ */
+async function loadDocuments() {
+    docsLoading.value = true;
+    try {
+        const { data } = await adminProcedureDocumentsApi.list(id.value);
+        procedureDocuments.value = Array.isArray(data.data) ? data.data : [];
+    } catch (e) {
+        procedureDocuments.value = [];
+        ElMessage.error(apiErrorMessage(e, 'Не удалось загрузить документы'));
+    } finally {
+        docsLoading.value = false;
+    }
+}
 
 /**
  * @returns {Promise<void>}
@@ -52,18 +78,80 @@ async function load() {
             form.description = procedure.value.description || '';
             form.customer_contact_name = procedure.value.customer_contact_name || '';
             form.customer_contact_email = procedure.value.customer_contact_email || '';
-            form.starts_at = procedure.value.starts_at
-                ? String(procedure.value.starts_at).slice(0, 19).replace('T', ' ')
-                : '';
-            form.ends_at = procedure.value.ends_at
-                ? String(procedure.value.ends_at).slice(0, 19).replace('T', ' ')
-                : '';
+            form.starts_at = toNaiveDateTimeMoscow(procedure.value.starts_at);
+            form.ends_at = toNaiveDateTimeMoscow(procedure.value.ends_at);
         }
+        await loadDocuments();
     } catch (e) {
         ElMessage.error(e?.response?.data?.message || 'Не найдено');
         procedure.value = null;
+        procedureDocuments.value = [];
     } finally {
         loading.value = false;
+    }
+}
+
+/**
+ * @param {{ raw: File }} uploadFile Файл
+ * @returns {Promise<void>}
+ */
+async function onUploadDocument({ raw }) {
+    if (!raw || !canWrite.value) {
+        return;
+    }
+    docUploading.value = true;
+    try {
+        await adminProcedureDocumentsApi.upload(id.value, raw);
+        ElMessage.success('Документ загружен');
+        await loadDocuments();
+    } catch (e) {
+        ElMessage.error(apiErrorMessage(e, 'Не удалось загрузить документ'));
+    } finally {
+        docUploading.value = false;
+    }
+}
+
+/**
+ * @param {Record<string, unknown>} row Документ
+ * @returns {Promise<void>}
+ */
+async function onOpenDocument(row) {
+    try {
+        const { data } = await adminProcedureDocumentsApi.download(id.value, row.id, { inline: true });
+        openBlobInNewTab(data);
+    } catch (e) {
+        ElMessage.error(apiErrorMessage(e, 'Не удалось открыть файл'));
+    }
+}
+
+/**
+ * @param {Record<string, unknown>} row Документ
+ * @returns {Promise<void>}
+ */
+async function onDownloadDocument(row) {
+    try {
+        const { data } = await adminProcedureDocumentsApi.download(id.value, row.id);
+        saveBlobAsFile(data, String(row.file_name || 'document'));
+    } catch (e) {
+        ElMessage.error(apiErrorMessage(e, 'Не удалось скачать файл'));
+    }
+}
+
+/**
+ * @param {number|string} documentId ID документа
+ * @returns {Promise<void>}
+ */
+async function onDeleteDocument(documentId) {
+    const ok = await confirmAction('Удалить этот файл документации?', 'Удаление');
+    if (!ok) {
+        return;
+    }
+    try {
+        await adminProcedureDocumentsApi.destroy(id.value, documentId);
+        ElMessage.success('Документ удалён');
+        await loadDocuments();
+    } catch (e) {
+        ElMessage.error(apiErrorMessage(e, 'Не удалось удалить документ'));
     }
 }
 
@@ -229,6 +317,14 @@ watch(id, load);
         </el-button>
       </el-space>
 
+      <el-alert
+        class="mb"
+        type="info"
+        :closable="false"
+        show-icon
+        title="Настраиваемые поля — анкета участника при подаче КП (ответы видны в карточке КП). Доп. условия — параметры самой процедуры (сроки поставки и т.п.), их задаёт администратор, участник их не заполняет."
+      />
+
       <el-form v-if="canWrite" label-position="top" @submit.prevent="onSave">
         <el-form-item label="Название">
           <el-input v-model="form.title" />
@@ -272,6 +368,55 @@ watch(id, load);
         <el-descriptions-item label="Заказчик">{{ procedure.company?.name || procedure.company_id }}</el-descriptions-item>
         <el-descriptions-item label="Категория">{{ procedure.classifier_category?.name || procedure.classifier_category_id }}</el-descriptions-item>
       </el-descriptions>
+
+      <h2 class="section-title">Конкурсная документация</h2>
+      <p class="muted">{{ DOCUMENT_FORMATS_HINT }}</p>
+      <el-upload
+        v-if="canWrite"
+        :auto-upload="false"
+        :show-file-list="false"
+        :accept="DOCUMENT_ACCEPT"
+        :disabled="docUploading"
+        @change="onUploadDocument"
+      >
+        <el-button :loading="docUploading">Загрузить файл</el-button>
+      </el-upload>
+      <el-table
+        v-loading="docsLoading"
+        :data="procedureDocuments"
+        size="small"
+        empty-text="Документов пока нет"
+        class="mt"
+      >
+        <el-table-column prop="file_name" label="Файл" min-width="220" />
+        <el-table-column label="Загружен" width="160">
+          <template #default="{ row }">{{ formatDateTime(row.created_at) }}</template>
+        </el-table-column>
+        <el-table-column label="Действия" width="150" fixed="right">
+          <template #default="{ row }">
+            <div class="etp-table-actions">
+              <EtpIconButton
+                v-if="isPdfFile(row.file_name)"
+                title="Открыть PDF"
+                @click="onOpenDocument(row)"
+              >
+                <View />
+              </EtpIconButton>
+              <EtpIconButton title="Скачать" @click="onDownloadDocument(row)">
+                <Download />
+              </EtpIconButton>
+              <EtpIconButton
+                v-if="canWrite"
+                type="danger"
+                title="Удалить"
+                @click="onDeleteDocument(row.id)"
+              >
+                <Delete />
+              </EtpIconButton>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
 
       <el-alert
         class="mt"
@@ -323,5 +468,10 @@ watch(id, load);
 /* Обёртка нужна, чтобы tooltip работал на disabled-кнопке */
 .btn-disabled-wrap {
   display: inline-block;
+}
+
+.section-title {
+  font-size: 1.05rem;
+  margin: 1.25rem 0 0.5rem;
 }
 </style>

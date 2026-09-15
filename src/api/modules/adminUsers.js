@@ -13,6 +13,24 @@ import urls from '@/api/urls';
 const list = (params = {}) => apiClient.get(urls.adminUsers, { params });
 
 /**
+ * Карточка одного пользователя.
+ * @param {number|string} userId ID
+ * @returns {Promise<import('axios').AxiosResponse>}
+ */
+const show = (userId) => apiClient.get(urls.adminUser(userId));
+
+/**
+ * Служебный комментарий о пользователе.
+ * @param {number|string} userId ID
+ * @param {string|null} adminNotes Текст
+ * @returns {Promise<import('axios').AxiosResponse>}
+ */
+const updateAdminNotes = async (userId, adminNotes) => {
+    await fetchCsrfCookie();
+    return apiClient.put(urls.adminUserAdminNotes(userId), { admin_notes: adminNotes });
+};
+
+/**
  * Одобрить регистрацию участника.
  * @param {number|string} userId ID пользователя
  * @returns {Promise<import('axios').AxiosResponse>}
@@ -80,6 +98,8 @@ const downloadDocument = (userId, documentId, options = {}) => apiClient.get(
 
 export default {
     list,
+    show,
+    updateAdminNotes,
     approve,
     block,
     unblock,

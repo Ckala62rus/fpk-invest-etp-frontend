@@ -9,6 +9,7 @@ import { User, View } from '@element-plus/icons-vue';
 import adminProposalsApi from '@/api/modules/adminProposals';
 import { formatDateTime } from '@/helpers/format';
 import EtpIconButton from '@/components/ui/EtpIconButton.vue';
+import UserOrgDialog from '@/components/admin/UserOrgDialog.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -16,6 +17,9 @@ const procedureId = computed(() => route.params.id);
 
 const loading = ref(false);
 const items = ref([]);
+const orgDialogVisible = ref(false);
+/** @type {import('vue').Ref<number|string|null>} */
+const orgDialogUserId = ref(null);
 
 /**
  * @returns {Promise<void>}
@@ -44,7 +48,8 @@ function openParticipant(row) {
         ElMessage.warning('Нет ID участника');
         return;
     }
-    router.push({ name: 'admin.users', query: { user_id: String(row.user_id) } });
+    orgDialogUserId.value = row.user_id;
+    orgDialogVisible.value = true;
 }
 
 onMounted(load);
@@ -58,7 +63,7 @@ watch(procedureId, load);
     </el-button>
     <h1>КП по процедуре #{{ procedureId }}</h1>
     <p class="muted">
-      Кнопка «Профиль» открывает карточку участника и документы организации (устав и т.п.) из его ЛК.
+      Кнопка «Профиль» открывает карточку участника и документы организации из его ЛК.
     </p>
 
     <el-table :data="items" stripe>
@@ -69,13 +74,6 @@ watch(procedureId, load);
       </el-table-column>
       <el-table-column label="Подано" width="150">
         <template #default="{ row }">{{ formatDateTime(row.submitted_at) }}</template>
-      </el-table-column>
-      <el-table-column label="Контент" width="120">
-        <template #default="{ row }">
-          <el-tag :type="row.content_hidden ? 'warning' : 'success'" size="small">
-            {{ row.content_hidden ? 'скрыт' : 'полный' }}
-          </el-tag>
-        </template>
       </el-table-column>
       <el-table-column label="" width="110">
         <template #default="{ row }">
@@ -96,6 +94,8 @@ watch(procedureId, load);
         </template>
       </el-table-column>
     </el-table>
+
+    <UserOrgDialog v-model="orgDialogVisible" :user-id="orgDialogUserId" />
   </div>
 </template>
 

@@ -43,7 +43,7 @@ onMounted(load);
           и нажмите «Подать КП», либо перейдите к списку процедур.
         </p>
       </div>
-      <el-button type="primary" @click="router.push({ name: 'procedures.index' })">
+      <el-button type="primary" @click="router.push({ name: 'home' })">
         К процедурам на витрине
       </el-button>
     </div>

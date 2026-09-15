@@ -85,6 +85,11 @@ async function onLogout() {
                   <span class="menu-title">Доп. условия</span>
                 </router-link>
               </div>
+              <div v-if="isSuperAdmin" class="menu-item">
+                <router-link class="menu-link" :to="{ name: 'admin.settings' }">
+                  <span class="menu-title">Настройки</span>
+                </router-link>
+              </div>
               <div class="menu-item">
                 <router-link class="menu-link" :to="{ name: 'admin.reports' }">
                   <span class="menu-title">Отчёты</span>
@@ -149,7 +154,7 @@ async function onLogout() {
 
 <style scoped>
 #kt_aside {
-  width: 265px;
+  width: 280px;
   background: #1e1e2d;
   min-height: 100vh;
   display: flex;
@@ -161,17 +166,47 @@ async function onLogout() {
   padding-bottom: 1rem;
 }
 
+.aside-logo .logo {
+  height: 18px;
+}
+
+.aside-logo span {
+  font-size: 1.05rem !important;
+}
+
+.menu-item {
+  margin-bottom: 2px;
+}
+
 .menu-link {
-  color: #9899ac !important;
-  padding: 0.65rem 1rem;
-  border-radius: 0.475rem;
+  color: #c5c6d8 !important;
+  padding: 0.85rem 1.1rem !important;
+  border-radius: 0.5rem;
   display: flex;
+  align-items: center;
+  min-height: 48px;
+}
+
+.menu-title {
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0.01em;
 }
 
 .menu-link.router-link-active,
 .menu-link:hover {
   color: #fff !important;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.menu-link.router-link-active .menu-title {
+  font-weight: 700 !important;
+}
+
+.menu-section {
+  font-size: 0.8rem !important;
+  letter-spacing: 0.06em;
 }
 
 .wrapper {

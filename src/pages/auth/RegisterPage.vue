@@ -234,12 +234,15 @@ async function onSubmit() {
           </el-form-item>
 
           <el-row :gutter="16">
-            <el-col :md="12" :sm="24">
+            <el-col :span="24">
               <el-form-item label="Телефон" prop="phone" :error="serverErrors.phone">
                 <el-input v-model="form.phone" />
               </el-form-item>
             </el-col>
-            <el-col :md="12" :sm="24">
+          </el-row>
+
+          <el-row :gutter="16">
+            <el-col :span="24">
               <el-form-item
                 label="Дата рождения руководителя"
                 prop="director_birth_date"

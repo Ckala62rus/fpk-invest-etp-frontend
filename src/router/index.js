@@ -50,9 +50,7 @@ const routes = [
     },
     {
         path: '/procedures',
-        name: 'procedures.index',
-        component: () => import('@/pages/public/ProceduresIndexPage.vue'),
-        meta: { layout: 'public', title: 'Процедуры' },
+        redirect: { name: 'home' },
     },
     {
         path: '/procedures/:id',
@@ -379,6 +377,17 @@ const routes = [
             requiresAuth: true,
             roles: [...ADMIN_ROLES],
             title: 'Согласование',
+        },
+    },
+    {
+        path: '/admin/settings',
+        name: 'admin.settings',
+        component: () => import('@/pages/admin/AdminSettingsPage.vue'),
+        meta: {
+            layout: 'admin',
+            requiresAuth: true,
+            roles: [ROLES.SUPER_ADMIN],
+            title: 'Настройки',
         },
     },
     {

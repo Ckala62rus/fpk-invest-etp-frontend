@@ -139,7 +139,14 @@ async function onSubmit() {
 </template>
 
 <style scoped>
+.etp-page {
+  display: flex;
+  justify-content: center;
+}
+
 .form-card {
+  margin: 0 auto;
+  width: 100%;
   max-width: 640px;
 }
 

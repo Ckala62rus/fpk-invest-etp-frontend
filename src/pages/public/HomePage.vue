@@ -1,124 +1,192 @@
 <script setup>
 /**
- * Главная публичная страница: превью открытых ТЗП + быстрые ссылки.
+ * Главная: полный список открытых ТЗП (витрина). Отдельной /procedures больше нет.
  */
-import { onMounted, ref } from 'vue';
+import { onMounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import proceduresApi from '@/api/modules/procedures';
+import { PROCEDURE_TYPES, PUBLIC_PROCEDURE_STATUSES } from '@/constants/procedure';
 import { formatDateTime } from '@/helpers/format';
 
 const router = useRouter();
 
 const loading = ref(false);
-const preview = ref([]);
-const loadError = ref('');
+const items = ref([]);
+const errorMessage = ref('');
+
+const filters = reactive({
+    search: '',
+    type: '',
+    status: '',
+});
+
+const pagination = reactive({
+    page: 1,
+    perPage: 15,
+    total: 0,
+});
 
 /**
- * Загружает первые процедуры для витрины на главной.
  * @returns {Promise<void>}
  */
-async function loadPreview() {
+async function loadList() {
     loading.value = true;
-    loadError.value = '';
+    errorMessage.value = '';
     try {
-        const { data } = await proceduresApi.list({ per_page: 5, page: 1 });
-        preview.value = Array.isArray(data.data) ? data.data : [];
+        const { data } = await proceduresApi.list({
+            search: filters.search || undefined,
+            type: filters.type || undefined,
+            status: filters.status || undefined,
+            page: pagination.page,
+            per_page: pagination.perPage,
+        });
+        items.value = Array.isArray(data.data) ? data.data : [];
+        pagination.total = Number(data.meta?.total ?? items.value.length);
     } catch (e) {
-        loadError.value = e?.response?.data?.message || e?.message || 'API недоступен';
-        preview.value = [];
+        errorMessage.value = e?.response?.data?.message || e?.message || 'Не удалось загрузить список';
+        items.value = [];
     } finally {
         loading.value = false;
     }
 }
 
-onMounted(loadPreview);
+/**
+ * @returns {void}
+ */
+function onFilterChange() {
+    pagination.page = 1;
+    loadList();
+}
+
+/**
+ * @param {number} id ID ТЗП
+ * @returns {void}
+ */
+function openProcedure(id) {
+    router.push({ name: 'procedures.show', params: { id } });
+}
+
+onMounted(loadList);
+watch(() => pagination.page, loadList);
 </script>
 
 <template>
   <div class="etp-page">
     <div class="etp-card">
-      <h1>Электронная торговая площадка</h1>
-      <p class="lead">
+      <h1>Торгово-закупочные процедуры</h1>
+      <p class="muted">
         Открытые ТЗП (торгово-закупочные процедуры) ФПК «Инвест». Участие — после регистрации и одобрения.
       </p>
 
-      <div class="home-actions">
-        <el-button type="primary" @click="router.push({ name: 'procedures.index' })">
-          Все процедуры
-        </el-button>
-        <el-button @click="router.push({ name: 'login' })">Войти</el-button>
-        <el-button @click="router.push({ name: 'register' })">Регистрация</el-button>
-        <el-button link type="primary" @click="router.push({ name: 'complaint' })">
-          Жалоба
-        </el-button>
-        <el-button link type="warning" @click="router.push({ name: 'corruption' })">
-          Антикоррупция
-        </el-button>
-      </div>
-
-      <h2 class="section-title">Сейчас на площадке</h2>
+      <el-form class="filters" inline @submit.prevent="onFilterChange">
+        <el-form-item label="Поиск">
+          <el-input
+            v-model="filters.search"
+            clearable
+            placeholder="Номер или название"
+            style="width: 220px"
+            @clear="onFilterChange"
+          />
+        </el-form-item>
+        <el-form-item label="Тип">
+          <el-select
+            v-model="filters.type"
+            clearable
+            placeholder="Все"
+            style="width: 200px"
+            @change="onFilterChange"
+          >
+            <el-option
+              v-for="t in PROCEDURE_TYPES"
+              :key="t.value"
+              :label="t.label"
+              :value="t.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="Статус">
+          <el-select
+            v-model="filters.status"
+            clearable
+            placeholder="Все"
+            style="width: 180px"
+            @change="onFilterChange"
+          >
+            <el-option
+              v-for="s in PUBLIC_PROCEDURE_STATUSES"
+              :key="s.value"
+              :label="s.label"
+              :value="s.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="onFilterChange">Найти</el-button>
+        </el-form-item>
+      </el-form>
 
       <el-alert
-        v-if="loadError"
+        v-if="errorMessage"
         type="error"
-        :title="loadError"
+        :title="errorMessage"
         show-icon
         :closable="false"
         class="mb"
       />
 
-      <el-skeleton v-else-if="loading" :rows="4" animated />
-
       <el-table
-        v-else
-        :data="preview"
+        v-loading="loading"
+        :data="items"
         stripe
-        empty-text="Нет опубликованных процедур"
         style="width: 100%"
-        @row-click="(row) => router.push({ name: 'procedures.show', params: { id: row.id } })"
+        empty-text="Нет опубликованных процедур"
+        @row-click="(row) => openProcedure(row.id)"
       >
-        <el-table-column prop="number" label="Номер" width="130" />
-        <el-table-column prop="title" label="Название" min-width="200" />
-        <el-table-column label="Тип" width="150">
+        <el-table-column prop="number" label="Номер" width="140" />
+        <el-table-column prop="title" label="Название" min-width="220" />
+        <el-table-column label="Тип" width="160">
           <template #default="{ row }">{{ row.type_label || row.type }}</template>
+        </el-table-column>
+        <el-table-column label="Статус" width="140">
+          <template #default="{ row }">
+            <el-tag size="small">{{ row.status_label || row.status }}</el-tag>
+          </template>
         </el-table-column>
         <el-table-column label="Окончание" width="150">
           <template #default="{ row }">{{ formatDateTime(row.ends_at) }}</template>
         </el-table-column>
       </el-table>
 
-      <div v-if="preview.length" class="more">
-        <router-link :to="{ name: 'procedures.index' }">Смотреть все →</router-link>
+      <div class="pager">
+        <el-pagination
+          v-model:current-page="pagination.page"
+          :page-size="pagination.perPage"
+          :total="pagination.total"
+          layout="prev, pager, next, total"
+          background
+        />
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.lead {
-  color: #4b5563;
-  max-width: 40rem;
+.muted {
+  color: #6b7280;
 }
 
-.home-actions {
-  margin: 1.25rem 0;
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.section-title {
-  font-size: 1.15rem;
-  margin: 1.5rem 0 0.75rem;
+.filters {
+  margin: 1rem 0;
 }
 
 .mb {
   margin-bottom: 1rem;
 }
 
-.more {
-  margin-top: 0.75rem;
+.pager {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
 }
 
 :deep(.el-table__row) {

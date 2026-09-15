@@ -31,9 +31,18 @@ export function getEcho() {
 
     window.Pusher = Pusher;
 
-    const scheme = import.meta.env.VITE_REVERB_SCHEME || 'http';
-    const host = import.meta.env.VITE_REVERB_HOST || 'localhost';
-    const port = Number(import.meta.env.VITE_REVERB_PORT || 6001);
+    // Prod same-origin: VITE_REVERB_USE_PAGE_ORIGIN=true — схема/хост/порт из URL страницы
+    // (переключение HTTP↔HTTPS на nginx без пересборки SPA).
+    const usePageOrigin = String(import.meta.env.VITE_REVERB_USE_PAGE_ORIGIN || '') === 'true';
+    const scheme = usePageOrigin
+        ? (window.location.protocol === 'https:' ? 'https' : 'http')
+        : (import.meta.env.VITE_REVERB_SCHEME || 'http');
+    const host = usePageOrigin
+        ? window.location.hostname
+        : (import.meta.env.VITE_REVERB_HOST || 'localhost');
+    const port = usePageOrigin
+        ? Number(window.location.port || (scheme === 'https' ? 443 : 80))
+        : Number(import.meta.env.VITE_REVERB_PORT || 6001);
 
     echoInstance = new Echo({
         broadcaster: 'reverb',

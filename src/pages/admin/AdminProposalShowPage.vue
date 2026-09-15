@@ -1,19 +1,19 @@
 <script setup>
 /**
- * Админка: карточка КП — допуск, документы (открыть/скачать), чат.
+ * Админка: карточка КП — документы (открыть/скачать), ответы полей, чат, профиль участника.
  */
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { Download, User, View } from '@element-plus/icons-vue';
 import adminProposalsApi from '@/api/modules/adminProposals';
-import adminUsersApi from '@/api/modules/adminUsers';
 import { ROLES } from '@/constants/roles';
 import { useAuthStore } from '@/stores/auth';
-import { formatDateTime } from '@/helpers/format';
+import { apiErrorMessage, formatDateTime } from '@/helpers/format';
 import { isPdfFile, openBlobInNewTab, saveBlobAsFile } from '@/helpers/files';
 import EtpIconButton from '@/components/ui/EtpIconButton.vue';
 import ProposalChat from '@/components/ui/ProposalChat.vue';
+import UserOrgDialog from '@/components/admin/UserOrgDialog.vue';
 
 const auth = useAuthStore();
 const route = useRoute();
@@ -21,7 +21,7 @@ const router = useRouter();
 
 const procedureId = computed(() => route.params.id);
 const proposalId = computed(() => route.params.proposalId);
-const canDecide = computed(() => auth.hasRole([ROLES.SUPER_ADMIN, ROLES.TRADE_ADMIN]));
+const canMessage = computed(() => auth.hasRole([ROLES.SUPER_ADMIN, ROLES.TRADE_ADMIN]));
 
 const loading = ref(false);
 const proposal = ref(null);
@@ -29,15 +29,10 @@ const messages = ref([]);
 const messageText = ref('');
 const sending = ref(false);
 
-/** Документы профиля организации (не файлы КП) */
-const profileDocuments = ref(/** @type {Array<Record<string, unknown>>} */ ([]));
-const profileDocsLoading = ref(false);
+const orgDialogVisible = ref(false);
+/** @type {import('vue').Ref<number|string|null>} */
+const orgDialogUserId = ref(null);
 
-const decisionForm = reactive({
-    decision: 'admit',
-    reason: '',
-});
-const deciding = ref(false);
 /** @type {ReturnType<typeof setInterval>|null} */
 let pollTimer = null;
 
@@ -60,26 +55,6 @@ async function loadMessagesQuiet() {
 /**
  * @returns {Promise<void>}
  */
-async function loadProfileDocuments() {
-    const userId = proposal.value?.user_id;
-    if (!userId) {
-        profileDocuments.value = [];
-        return;
-    }
-    profileDocsLoading.value = true;
-    try {
-        const { data } = await adminUsersApi.listDocuments(userId);
-        profileDocuments.value = Array.isArray(data.data) ? data.data : [];
-    } catch {
-        profileDocuments.value = [];
-    } finally {
-        profileDocsLoading.value = false;
-    }
-}
-
-/**
- * @returns {Promise<void>}
- */
 async function load() {
     loading.value = true;
     try {
@@ -89,37 +64,11 @@ async function load() {
         ]);
         proposal.value = p.data.data ?? null;
         messages.value = Array.isArray(m.data.data) ? m.data.data : [];
-        await loadProfileDocuments();
     } catch (e) {
-        ElMessage.error(e?.response?.data?.message || 'Не удалось открыть КП');
+        ElMessage.error(apiErrorMessage(e, 'Не удалось открыть КП'));
         proposal.value = null;
-        profileDocuments.value = [];
     } finally {
         loading.value = false;
-    }
-}
-
-/**
- * @returns {Promise<void>}
- */
-async function onDecision() {
-    if (!decisionForm.reason.trim() || decisionForm.reason.trim().length < 3) {
-        ElMessage.warning('Укажите причину (мин. 3 символа)');
-        return;
-    }
-    deciding.value = true;
-    try {
-        await adminProposalsApi.admission(procedureId.value, proposalId.value, {
-            decision: decisionForm.decision,
-            reason: decisionForm.reason.trim(),
-        });
-        ElMessage.success('Решение сохранено');
-        decisionForm.reason = '';
-        await load();
-    } catch (e) {
-        ElMessage.error(e?.response?.data?.message || 'Ошибка решения');
-    } finally {
-        deciding.value = false;
     }
 }
 
@@ -137,7 +86,7 @@ async function onOpenDoc(row) {
         );
         openBlobInNewTab(data);
     } catch (e) {
-        ElMessage.error(e?.response?.data?.message || 'Не удалось открыть файл');
+        ElMessage.error(apiErrorMessage(e, 'Не удалось открыть файл'));
     }
 }
 
@@ -154,41 +103,7 @@ async function onDownloadDoc(row) {
         );
         saveBlobAsFile(data, String(row.file_name || 'document'));
     } catch (e) {
-        ElMessage.error(e?.response?.data?.message || 'Не удалось скачать файл');
-    }
-}
-
-/**
- * @param {Record<string, unknown>} row Документ профиля
- * @returns {Promise<void>}
- */
-async function onOpenProfileDoc(row) {
-    const userId = proposal.value?.user_id;
-    if (!userId) {
-        return;
-    }
-    try {
-        const { data } = await adminUsersApi.downloadDocument(userId, row.id, { inline: true });
-        openBlobInNewTab(data);
-    } catch (e) {
-        ElMessage.error(e?.response?.data?.message || 'Не удалось открыть файл');
-    }
-}
-
-/**
- * @param {Record<string, unknown>} row Документ профиля
- * @returns {Promise<void>}
- */
-async function onDownloadProfileDoc(row) {
-    const userId = proposal.value?.user_id;
-    if (!userId) {
-        return;
-    }
-    try {
-        const { data } = await adminUsersApi.downloadDocument(userId, row.id);
-        saveBlobAsFile(data, String(row.file_name || 'document'));
-    } catch (e) {
-        ElMessage.error(e?.response?.data?.message || 'Не удалось скачать файл');
+        ElMessage.error(apiErrorMessage(e, 'Не удалось скачать файл'));
     }
 }
 
@@ -201,7 +116,8 @@ function openParticipantCard() {
         ElMessage.warning('Нет ID участника');
         return;
     }
-    router.push({ name: 'admin.users', query: { user_id: String(userId) } });
+    orgDialogUserId.value = userId;
+    orgDialogVisible.value = true;
 }
 
 /**
@@ -219,7 +135,7 @@ async function onSend() {
         ElMessage.success('Сообщение отправлено');
         await loadMessagesQuiet();
     } catch (e) {
-        ElMessage.error(e?.response?.data?.message || 'Ошибка отправки');
+        ElMessage.error(apiErrorMessage(e, 'Ошибка отправки'));
     } finally {
         sending.value = false;
     }
@@ -279,11 +195,20 @@ watch([procedureId, proposalId], load);
           <el-descriptions-item label="Согласие с формой договора">
             {{ formatDateTime(proposal.contract_form_agreed_at) }}
           </el-descriptions-item>
-          <el-descriptions-item v-if="proposal.admission_decision" label="Допуск">
-            {{ proposal.admission_decision.decision_label || proposal.admission_decision.decision }}
-            — {{ proposal.admission_decision.reason }}
-          </el-descriptions-item>
         </el-descriptions>
+
+        <template v-if="proposal.field_values?.length">
+          <h2>Ответы по полям анкеты</h2>
+          <el-descriptions :column="1" border class="mb">
+            <el-descriptions-item
+              v-for="(fv, idx) in proposal.field_values"
+              :key="fv.procedure_custom_field_id ?? idx"
+              :label="fv.label || `Поле #${fv.procedure_custom_field_id}`"
+            >
+              {{ fv.value || '—' }}
+            </el-descriptions-item>
+          </el-descriptions>
+        </template>
 
         <h2>Документы КП</h2>
         <el-table :data="proposal.documents || []" size="small" empty-text="Нет файлов" class="mb">
@@ -308,66 +233,15 @@ watch([procedureId, proposalId], load);
         </el-table>
       </template>
 
-      <h2>Документы организации (профиль)</h2>
-      <p class="hint mb">Устав и прочие файлы из личного кабинета участника — не путать с файлами КП.</p>
-      <el-table
-        v-loading="profileDocsLoading"
-        :data="profileDocuments"
-        size="small"
-        empty-text="Участник ещё не загружал документы в профиль"
-        class="mb"
-      >
-        <el-table-column prop="file_name" label="Файл" min-width="220" />
-        <el-table-column label="Загружен" width="160">
-          <template #default="{ row }">{{ formatDateTime(row.uploaded_at) }}</template>
-        </el-table-column>
-        <el-table-column label="Действия" width="120" fixed="right">
-          <template #default="{ row }">
-            <div class="etp-table-actions">
-              <EtpIconButton
-                v-if="isPdfFile(row.file_name)"
-                title="Открыть PDF"
-                @click="onOpenProfileDoc(row)"
-              >
-                <View />
-              </EtpIconButton>
-              <EtpIconButton title="Скачать" @click="onDownloadProfileDoc(row)">
-                <Download />
-              </EtpIconButton>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <div v-if="canDecide" class="decision mb">
-        <h2>Решение о допуске</h2>
-        <p class="hint">
-          (разрешение участнику участвовать дальше: допуск — заявка принята к рассмотрению/торгам;
-          отклонение — отказ с обязательной причиной)
-        </p>
-        <el-radio-group v-model="decisionForm.decision">
-          <el-radio value="admit">Допустить</el-radio>
-          <el-radio value="reject">Отклонить</el-radio>
-        </el-radio-group>
-        <el-input
-          v-model="decisionForm.reason"
-          type="textarea"
-          :rows="3"
-          placeholder="Причина (обязательно)"
-          class="mt"
-        />
-        <el-button type="primary" class="mt" :loading="deciding" @click="onDecision">
-          Сохранить решение
-        </el-button>
-      </div>
-
       <h2>Переписка</h2>
       <ProposalChat :messages="messages" :current-user-id="auth.user?.id" />
-      <template v-if="canDecide">
+      <template v-if="canMessage">
         <el-input v-model="messageText" type="textarea" :rows="3" class="mt" />
         <el-button type="primary" class="mt" :loading="sending" @click="onSend">Отправить</el-button>
       </template>
     </template>
+
+    <UserOrgDialog v-model="orgDialogVisible" :user-id="orgDialogUserId" />
   </div>
 </template>
 
@@ -388,19 +262,7 @@ h2 {
   margin-top: 0.75rem;
 }
 
-.hint {
-  color: #6b7280;
-  font-size: 0.875rem;
-  margin: 0.35rem 0 0.75rem;
-}
-
 .mr {
   margin-right: 0.35rem;
-}
-
-.decision {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 1rem;
 }
 </style>

@@ -1,14 +1,17 @@
 <script setup>
 /**
- * Карточка своего КП: документы (открыть/скачать/удалить) и переписка.
+ * Карточка своего КП: документация ТЗП, файлы КП и переписка.
  */
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { Delete, Download, View } from '@element-plus/icons-vue';
 import proposalsApi from '@/api/modules/proposals';
+import apiClient from '@/api/axios';
+import urls from '@/api/urls';
+import { DOCUMENT_ACCEPT, DOCUMENT_FORMATS_HINT } from '@/constants/documents';
 import { rememberProposalId } from '@/helpers/myProposals';
-import { formatDateTime } from '@/helpers/format';
+import { apiErrorMessage, formatDateTime } from '@/helpers/format';
 import { confirmAction } from '@/helpers/confirm';
 import { isPdfFile, openBlobInNewTab, saveBlobAsFile } from '@/helpers/files';
 import { useAuthStore } from '@/stores/auth';
@@ -28,6 +31,12 @@ const sending = ref(false);
 const uploading = ref(false);
 /** @type {ReturnType<typeof setInterval>|null} */
 let pollTimer = null;
+
+/** Документы ТЗП, загруженные администратором */
+const procedureDocuments = computed(() => {
+    const list = proposal.value?.procedure?.documents;
+    return Array.isArray(list) ? list : [];
+});
 
 /**
  * @returns {Promise<void>}
@@ -60,7 +69,7 @@ async function load() {
         documents.value = Array.isArray(docsRes.data.data) ? docsRes.data.data : [];
         messages.value = Array.isArray(msgRes.data.data) ? msgRes.data.data : [];
     } catch (e) {
-        ElMessage.error(e?.response?.data?.message || 'Не удалось открыть КП');
+        ElMessage.error(apiErrorMessage(e, 'Не удалось открыть КП'));
         proposal.value = null;
     } finally {
         loading.value = false;
@@ -81,15 +90,14 @@ async function onUpload({ raw }) {
         ElMessage.success('Файл загружен');
         await load();
     } catch (e) {
-        ElMessage.error(e?.response?.data?.message || 'Ошибка загрузки');
+        ElMessage.error(apiErrorMessage(e, 'Ошибка загрузки'));
     } finally {
         uploading.value = false;
     }
 }
 
 /**
- * Открыть PDF/файл в новой вкладке.
- * @param {Record<string, unknown>} row Документ
+ * @param {Record<string, unknown>} row Документ КП
  * @returns {Promise<void>}
  */
 async function onOpenDoc(row) {
@@ -97,13 +105,12 @@ async function onOpenDoc(row) {
         const { data } = await proposalsApi.downloadDocument(proposalId.value, row.id, { inline: true });
         openBlobInNewTab(data);
     } catch (e) {
-        ElMessage.error(e?.response?.data?.message || 'Не удалось открыть файл');
+        ElMessage.error(apiErrorMessage(e, 'Не удалось открыть файл'));
     }
 }
 
 /**
- * Скачать файл.
- * @param {Record<string, unknown>} row Документ
+ * @param {Record<string, unknown>} row Документ КП
  * @returns {Promise<void>}
  */
 async function onDownloadDoc(row) {
@@ -111,7 +118,52 @@ async function onDownloadDoc(row) {
         const { data } = await proposalsApi.downloadDocument(proposalId.value, row.id);
         saveBlobAsFile(data, String(row.file_name || 'document'));
     } catch (e) {
-        ElMessage.error(e?.response?.data?.message || 'Не удалось скачать файл');
+        ElMessage.error(apiErrorMessage(e, 'Не удалось скачать файл'));
+    }
+}
+
+/**
+ * Скачать конкурсный файл ТЗП (загружен админом).
+ *
+ * @param {Record<string, unknown>} row Документ процедуры
+ * @returns {Promise<void>}
+ */
+async function onDownloadProcedureDoc(row) {
+    const procedureId = proposal.value?.procedure_id || proposal.value?.procedure?.id;
+    if (!procedureId) {
+        return;
+    }
+    try {
+        const { data } = await apiClient.get(
+            urls.publicProcedureDocumentDownload(procedureId, row.id),
+            { responseType: 'blob' },
+        );
+        saveBlobAsFile(data, String(row.file_name || 'document'));
+    } catch (e) {
+        ElMessage.error(apiErrorMessage(e, 'Не удалось скачать файл процедуры'));
+    }
+}
+
+/**
+ * @param {Record<string, unknown>} row Документ процедуры
+ * @returns {Promise<void>}
+ */
+async function onOpenProcedureDoc(row) {
+    const procedureId = proposal.value?.procedure_id || proposal.value?.procedure?.id;
+    if (!procedureId) {
+        return;
+    }
+    try {
+        const { data } = await apiClient.get(
+            urls.publicProcedureDocumentDownload(procedureId, row.id),
+            {
+                responseType: 'blob',
+                params: { inline: 1 },
+            },
+        );
+        openBlobInNewTab(data);
+    } catch (e) {
+        ElMessage.error(apiErrorMessage(e, 'Не удалось открыть файл процедуры'));
     }
 }
 
@@ -129,7 +181,7 @@ async function onDeleteDoc(documentId) {
         ElMessage.success('Файл удалён');
         await load();
     } catch (e) {
-        ElMessage.error(e?.response?.data?.message || 'Не удалось удалить');
+        ElMessage.error(apiErrorMessage(e, 'Не удалось удалить'));
     }
 }
 
@@ -148,7 +200,7 @@ async function onSend() {
         ElMessage.success('Сообщение отправлено');
         await loadMessagesQuiet();
     } catch (e) {
-        ElMessage.error(e?.response?.data?.message || 'Не удалось отправить');
+        ElMessage.error(apiErrorMessage(e, 'Не удалось отправить'));
     } finally {
         sending.value = false;
     }
@@ -180,8 +232,57 @@ watch(proposalId, load);
         · подано {{ formatDateTime(proposal.submitted_at) }}
       </p>
 
-      <h2>Документы</h2>
-      <el-upload :auto-upload="false" :show-file-list="false" :disabled="uploading" @change="onUpload">
+      <template v-if="proposal.field_values?.length">
+        <h2>Ответы по полям анкеты</h2>
+        <el-descriptions :column="1" border class="mt">
+          <el-descriptions-item
+            v-for="(fv, idx) in proposal.field_values"
+            :key="fv.procedure_custom_field_id ?? idx"
+            :label="fv.label || `Поле #${fv.procedure_custom_field_id}`"
+          >
+            {{ fv.value || '—' }}
+          </el-descriptions-item>
+        </el-descriptions>
+      </template>
+
+      <h2>Документация процедуры</h2>
+      <p class="muted hint">
+        Файлы ТЗ и конкурсной документации, которые загрузил администратор. Только скачивание / просмотр.
+      </p>
+      <el-table
+        :data="procedureDocuments"
+        size="small"
+        empty-text="Администратор ещё не загрузил документы по процедуре"
+        class="mt"
+      >
+        <el-table-column prop="file_name" label="Файл" min-width="220" />
+        <el-table-column label="Действия" width="120" fixed="right">
+          <template #default="{ row }">
+            <div class="etp-table-actions">
+              <EtpIconButton
+                v-if="isPdfFile(row.file_name)"
+                title="Открыть PDF"
+                @click="onOpenProcedureDoc(row)"
+              >
+                <View />
+              </EtpIconButton>
+              <EtpIconButton title="Скачать" @click="onDownloadProcedureDoc(row)">
+                <Download />
+              </EtpIconButton>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <h2>Ваши документы КП</h2>
+      <p class="muted hint">{{ DOCUMENT_FORMATS_HINT }}</p>
+      <el-upload
+        :auto-upload="false"
+        :show-file-list="false"
+        :accept="DOCUMENT_ACCEPT"
+        :disabled="uploading"
+        @change="onUpload"
+      >
         <el-button :loading="uploading">Загрузить файл</el-button>
       </el-upload>
       <el-table :data="documents" size="small" empty-text="Нет файлов" class="mt">
@@ -228,5 +329,10 @@ h2 {
 
 .mt {
   margin-top: 0.75rem;
+}
+
+.hint {
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
 }
 </style>

@@ -21,17 +21,6 @@ const show = (procedureId, proposalId) => apiClient.get(urls.adminProcedurePropo
 /**
  * @param {number|string} procedureId ID ТЗП
  * @param {number|string} proposalId ID КП
- * @param {{ decision: string, reason: string, clarification_deadline?: string }} payload Решение
- * @returns {Promise<import('axios').AxiosResponse>}
- */
-const admission = async (procedureId, proposalId, payload) => {
-    await fetchCsrfCookie();
-    return apiClient.post(urls.adminProposalAdmission(procedureId, proposalId), payload);
-};
-
-/**
- * @param {number|string} procedureId ID ТЗП
- * @param {number|string} proposalId ID КП
  * @returns {Promise<import('axios').AxiosResponse>}
  */
 const listMessages = (procedureId, proposalId, config = {}) => apiClient.get(
@@ -70,7 +59,6 @@ const downloadDocument = (procedureId, proposalId, documentId, options = {}) => 
 export default {
     list,
     show,
-    admission,
     listMessages,
     sendMessage,
     downloadDocument,
